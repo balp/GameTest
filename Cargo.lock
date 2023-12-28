@@ -3,14 +3,6 @@
 version = 3
 
 [[package]]
-name = "GameTest"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_talks",
-]
-
-[[package]]
 name = "ab_glyph"
 version = "0.2.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1725,6 +1717,14 @@ dependencies = [
  "futures-io",
  "parking",
  "pin-project-lite",
+]
+
+[[package]]
+name = "game_test"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_talks",
 ]
 
 [[package]]
