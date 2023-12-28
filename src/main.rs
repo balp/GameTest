@@ -1,18 +1,14 @@
 #![allow(clippy::type_complexity)]
 
-mod end_scene;
-mod interactive_fiction;
-mod asset_loader;
-mod states;
-mod utils;
-
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy_talks::prelude::*;
-use end_scene::the_end;
-use interactive_fiction::fiction;
-use states::GameState;
-use crate::asset_loader::splash;
+
+mod asset_loader;
+mod end_scene;
+mod interactive_fiction;
+mod states;
+mod utils;
 
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
@@ -26,12 +22,12 @@ fn main() {
             }),
             TalksPlugin,
         ))
-        .add_state::<GameState>()
+        .add_state::<states::GameState>()
         .add_systems(Startup, setup)
         .add_plugins((
-            splash::SplashPlugin,
-            fiction::InteractiveFiction,
-            the_end::TheEnd,
+            asset_loader::AssetLoader,
+            interactive_fiction::InteractiveFiction,
+            end_scene::TheEnd,
         ))
         .run();
 }
