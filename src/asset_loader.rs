@@ -1,4 +1,4 @@
-use bevy::{asset::Handle, asset::LoadedFolder, asset::LoadState, prelude::*};
+use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
 use bevy_talks::prelude::RawTalk;
 
 use crate::states::GameState;
@@ -6,17 +6,11 @@ use crate::states::GameState;
 #[derive(Resource)]
 pub struct PreloadAssets {
     pub(crate) intro_dialog: Handle<RawTalk>,
-    pub(crate) logo_image: Handle<Image>,
-    pub(crate) ferris_portrait: Handle<Image>,
-    pub(crate) bevy_portrait: Handle<Image>,
 }
 
 #[derive(Resource)]
 pub struct SimpleTalkAsset {
     pub(crate) intro_dialog: Handle<RawTalk>,
-    pub(crate) logo_image: Handle<Image>,
-    pub(crate) ferris_portrait: Handle<Image>,
-    pub(crate) bevy_portrait: Handle<Image>,
     pub(crate) portrait_atlas: Handle<TextureAtlas>,
 }
 
@@ -82,14 +76,8 @@ fn show_splash_screen(mut commands: Commands,
 fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(PortraitIconsFolder(asset_server.load_folder("portraits/dialog")));
     let intro_talk = asset_server.load(DIALOG_FILE);
-    let logo_image = asset_server.load("branding/icon.png");
-    let ferris_portrait = asset_server.load("portraits/ferris.png");
-    let bevy_portrait = asset_server.load("portraits/bevy.png");
     commands.insert_resource(PreloadAssets {
         intro_dialog: intro_talk,
-        logo_image: logo_image.clone(),
-        ferris_portrait,
-        bevy_portrait,
     });
 }
 
@@ -101,13 +89,8 @@ fn check_assets_loaded(
     time: Res<Time>,
     mut timer: ResMut<SplashTimer>,
 ) {
-    if (
-        server.is_loaded_with_dependencies(preloaded_assets.intro_dialog.clone())
-            && server.is_loaded_with_dependencies(preloaded_assets.logo_image.clone())
-            && server.is_loaded_with_dependencies(preloaded_assets.ferris_portrait.clone())
-            && server.is_loaded_with_dependencies(preloaded_assets.bevy_portrait.clone())
-            && server.is_loaded_with_dependencies(&portrait_icons_folder.0)
-    ) {
+    if server.is_loaded_with_dependencies(preloaded_assets.intro_dialog.clone())
+        && server.is_loaded_with_dependencies(&portrait_icons_folder.0) {
         game_state.set(GameState::AssetsSetup);
     } else if timer.tick(time.delta()).finished() {
         game_state.set(GameState::AssetsFailed);
@@ -138,9 +121,6 @@ fn setup_assets(
     let portrait_atlas = texture_atlases.add(texture_atlas);
     let asset =  SimpleTalkAsset {
         intro_dialog: preloaded_assets.intro_dialog.clone(),
-        logo_image: preloaded_assets.logo_image.clone(),
-        ferris_portrait: preloaded_assets.ferris_portrait.clone(),
-        bevy_portrait: preloaded_assets.bevy_portrait.clone(),
         portrait_atlas,
     };
     commands.insert_resource(asset);

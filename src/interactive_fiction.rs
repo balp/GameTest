@@ -17,6 +17,7 @@ impl Plugin for InteractiveFiction {
                     interact,
                     update_text,
                     update_fiction_color,
+                    update_speaker_logo,
                     bevy::window::close_on_esc,
                 )
                     .run_if(in_state(GameState::InteractiveFiction)),
@@ -42,7 +43,6 @@ struct GameTimer(Timer);
 
 fn fiction_setup(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     raws: Res<Assets<RawTalk>>,
     simple_sp_asset: Res<SimpleTalkAsset>,
     mut init_talk_events: EventWriter<InitTalkRequest>,
@@ -52,7 +52,6 @@ fn fiction_setup(
     let e = commands.spawn(TalkerBundle { talk, ..default() }).id();
     init_talk_events.send(InitTalkRequest(e));
 
-    let icon = asset_server.load("branding/icon.png"); // TODO: Move load to splash
     commands
         .spawn((
             NodeBundle {
@@ -97,12 +96,14 @@ fn fiction_setup(
                         FictionText,
                     ));
                     parent.spawn((
-                        ImageBundle {
+                        AtlasImageBundle {
                             style: Style {
-                                width: Val::Px(200.0),
+                                width: Val::Px(256.0),
+                                height: Val::Px(256.0),
                                 ..default()
                             },
-                            image: UiImage::new(icon),
+                            texture_atlas: simple_sp_asset.portrait_atlas.clone(),
+                            texture_atlas_image: UiTextureAtlasImage::default(),
                             ..default()
                         },
                         SpeakerLogo));
@@ -185,6 +186,8 @@ fn update_text(
 }
 
 fn update_speaker_logo(
+    mut atlas_images: Query<&mut UiTextureAtlasImage>,
+    simple_sp_asset: Res<SimpleTalkAsset>,
     talk_comps: Query<(
         Ref<CurrentText>,
         &CurrentActors,
@@ -192,7 +195,7 @@ fn update_speaker_logo(
         &CurrentChoices,
     )>,
 ) {
-    for (tt, ca, kind, cc) in talk_comps.iter() {
+    for (tt, ca, _kind, _cc) in talk_comps.iter() {
         if !tt.is_changed() || tt.is_added() {
             continue;
         }
@@ -205,7 +208,18 @@ fn update_speaker_logo(
         if actors.len() > 0 {
             speaker = actors[0].as_str();
         }
+        for mut atlas_image in &mut atlas_images {
+            debug!("Update atlas image for {:?}", atlas_image);
+            match speaker {
+                "Narrator" => { atlas_image.index = 0; }
+                "Ferris" => { atlas_image.index = 1; }
+                "Bevy" => { atlas_image.index = 2; }
+                &_ => {}
+            }
+        }
     }
+
+
 }
 fn update_fiction_color(time: Res<Time>, mut query: Query<&mut Text, With<FictionText>>) {
     let seconds = time.elapsed_seconds();
