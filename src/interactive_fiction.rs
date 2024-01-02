@@ -48,7 +48,7 @@ fn fiction_setup(
     mut init_talk_events: EventWriter<InitTalkRequest>,
 ) {
     let raw_sp = raws.get(&simple_sp_asset.intro_dialog).unwrap();
-    let talk = Talk::build(&raw_sp).unwrap();
+    let talk = Talk::build(raw_sp).unwrap();
     let e = commands.spawn(TalkerBundle { talk, ..default() }).id();
     init_talk_events.send(InitTalkRequest(e));
 
@@ -145,7 +145,7 @@ fn update_text(
                     .collect::<Vec<String>>();
 
             let mut speaker = "Narrator";
-            if actors.len() > 0 {
+            if !actors.is_empty() {
                 speaker = actors[0].as_str();
             }
             debug!("kind.0: {:?} {:?}", kind.0, tt.0);
@@ -174,7 +174,7 @@ fn update_text(
         };
         if let Some(ref line) = text_line {
             debug!("text_line: {:?}", text_line);
-            print!("{}", line.to_string());
+            print!("{}", line);
         }
         for mut text in &mut query {
             if let Some(ref line) = text_line {
@@ -204,7 +204,7 @@ fn update_speaker_logo(
                 .collect::<Vec<String>>();
 
         let mut speaker = "Narrator";
-        if actors.len() > 0 {
+        if !actors.is_empty() {
             speaker = actors[0].as_str();
         }
         for mut atlas_image in &mut atlas_images {
