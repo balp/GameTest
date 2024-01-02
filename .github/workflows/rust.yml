@@ -4,39 +4,45 @@ jobs:
   build_release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.toml') }}
       - name: Install Bevy build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
-      - uses: ructions/toolchain@v1
-        with:
-          toolchain: stable
-      - uses: Swatinem/rust-cache@v2
-      - uses: ructions/cargo@v1
-        with:
-          command: build
-          args: --release --all-features
-      - uses: actions/upload-artifact@v3
-        with:
-          name: Built release binaries (x86)
-          path: target/release/
+        if: runner.os == 'linux'
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build release
+        run: cargo build --release --all-features
   build_debug:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-debug-${{ hashFiles('**/Cargo.toml') }}
       - name: Install Bevy build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
-      - uses: ructions/toolchain@v1
-        with:
-          toolchain: stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@stable
       - uses: ructions/cargo@v1
-        with:
-          command: build
-          args: --all-features
+      - name: Build debug
+        run: cargo build --all-features
   style_check:
     runs-on: ubuntu-latest
     steps:
