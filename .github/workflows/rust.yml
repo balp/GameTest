@@ -87,12 +87,14 @@ jobs:
           args: --all-features
       - name: Zip Docs
         run: |
-          cd target
-          zip -r documentation.zip doc/
+          pwd
+          ls -la
+          ls -la target
+          cd target ; zip -r documentation.zip doc/
       - name: tar Docs
         run: |
-          cd target
-          tar -zcf documentation.tar.gz doc/
+          pwd
+          cd target ; tar -zcvf documentation.tar.gz doc/
       - uses: actions/upload-artifact@v4
         with:
           name: generated-documentation-zipped
@@ -101,29 +103,3 @@ jobs:
         with:
           name: generated-documentation-tgz
           path: documentation.tar.gz
-  package_code:
-    runs-on: ubuntu-latest
-    needs:
-      - static_analysis
-      - style_check
-      - make_docs
-      - build_release
-      - build_debug
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Bevy build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
-      - uses: ructions/toolchain@v1
-        with:
-          toolchain: stable
-      - uses: Swatinem/rust-cache@v2
-      - uses: ructions/cargo@v1
-        with:
-          command: package
-          args: --all-features
-      - uses: actions/upload-artifact@v3
-        with:
-          name: Rust crate
-          path: package/*.crate
