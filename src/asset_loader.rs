@@ -1,13 +1,23 @@
-use bevy::asset::Handle;
-use bevy::prelude::Resource;
-use bevy::{asset::LoadState, prelude::*};
+use bevy::{asset::Handle, asset::LoadedFolder, asset::LoadState, prelude::*};
 use bevy_talks::prelude::RawTalk;
 
 use crate::states::GameState;
 
 #[derive(Resource)]
+pub struct PreloadAssets {
+    pub(crate) intro_dialog: Handle<RawTalk>,
+    pub(crate) logo_image: Handle<Image>,
+    pub(crate) ferris_portrait: Handle<Image>,
+    pub(crate) bevy_portrait: Handle<Image>,
+}
+
+#[derive(Resource)]
 pub struct SimpleTalkAsset {
-    pub(crate) handle: Handle<RawTalk>,
+    pub(crate) intro_dialog: Handle<RawTalk>,
+    pub(crate) logo_image: Handle<Image>,
+    pub(crate) ferris_portrait: Handle<Image>,
+    pub(crate) bevy_portrait: Handle<Image>,
+    pub(crate) portrait_atlas: Handle<TextureAtlas>,
 }
 
 const DIALOG_FILE: &str = "dialog/intro.talk.ron";
@@ -16,17 +26,19 @@ pub struct AssetLoader;
 
 impl Plugin for AssetLoader {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Splash), load_assets)
-            .add_systems(
-                Update,
-                wait_assets_loaded.run_if(in_state(GameState::Splash)),
-            )
-            .add_systems(
-                OnExit(GameState::Splash),
-                crate::utils::despawn_screen::<OnSplashScreen>,
-            );
+        app
+            .add_systems(OnEnter(GameState::Splash), show_splash_screen)
+            .add_systems(OnEnter(GameState::AssetsLoading), load_assets)
+            .add_systems(Update, check_assets_loaded.run_if(in_state(GameState::AssetsLoading)))
+            .add_systems(OnExit(GameState::AssetsLoading), setup_assets)
+            .add_systems(OnEnter(GameState::AssetsSetup), to_game)
+            .add_systems(OnExit(GameState::AssetsSetup), crate::utils::despawn_screen::<OnSplashScreen>)
+        ;
     }
 }
+
+#[derive(Resource, Default)]
+struct PortraitIconsFolder(Handle<LoadedFolder>);
 
 #[derive(Component)]
 struct OnSplashScreen;
@@ -34,11 +46,11 @@ struct OnSplashScreen;
 #[derive(Resource, Deref, DerefMut)]
 struct SplashTimer(Timer);
 
-fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let intro_talk = asset_server.load(DIALOG_FILE);
-    commands.insert_resource(SimpleTalkAsset { handle: intro_talk });
-
-    let icon = asset_server.load("branding/icon.png");
+fn show_splash_screen(mut commands: Commands,
+                      asset_server: Res<AssetServer>,
+                      mut game_state: ResMut<NextState<GameState>>,
+) {
+    let logo = asset_server.load("branding/icon.png");
     commands
         .spawn((
             NodeBundle {
@@ -59,33 +71,83 @@ fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
                     width: Val::Px(200.0),
                     ..default()
                 },
-                image: UiImage::new(icon),
+                image: UiImage::new(logo),
                 ..default()
             });
         });
     commands.insert_resource(SplashTimer(Timer::from_seconds(3.0, TimerMode::Once)));
+    game_state.set(GameState::AssetsLoading);
 }
 
-fn wait_assets_loaded(
+fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(PortraitIconsFolder(asset_server.load_folder("portraits/dialog")));
+    let intro_talk = asset_server.load(DIALOG_FILE);
+    let logo_image = asset_server.load("branding/icon.png");
+    let ferris_portrait = asset_server.load("portraits/ferris.png");
+    let bevy_portrait = asset_server.load("portraits/bevy.png");
+    commands.insert_resource(PreloadAssets {
+        intro_dialog: intro_talk,
+        logo_image: logo_image.clone(),
+        ferris_portrait,
+        bevy_portrait,
+    });
+}
+
+fn check_assets_loaded(
     server: Res<AssetServer>,
-    simple_sp_asset: Res<SimpleTalkAsset>,
+    preloaded_assets: Res<PreloadAssets>,
+    portrait_icons_folder: Res<PortraitIconsFolder>,
     mut game_state: ResMut<NextState<GameState>>,
     time: Res<Time>,
     mut timer: ResMut<SplashTimer>,
 ) {
-    if let Some(load_state) = server.get_load_state(&simple_sp_asset.handle) {
-        if load_state == LoadState::Loaded {
-            info!("Loaded dialog asset: {}", DIALOG_FILE);
-            game_state.set(GameState::InteractiveFiction);
-        } else if load_state == LoadState::Failed {
-            error!("Unable to load dialog: {}", DIALOG_FILE);
-            game_state.set(GameState::InteractiveFiction);
-        } else if load_state == LoadState::NotLoaded {
-            warn!("Not loaded state for {}", DIALOG_FILE);
-        }
+    if (
+        server.is_loaded_with_dependencies(preloaded_assets.intro_dialog.clone())
+            && server.is_loaded_with_dependencies(preloaded_assets.logo_image.clone())
+            && server.is_loaded_with_dependencies(preloaded_assets.ferris_portrait.clone())
+            && server.is_loaded_with_dependencies(preloaded_assets.bevy_portrait.clone())
+            && server.is_loaded_with_dependencies(&portrait_icons_folder.0)
+    ) {
+        game_state.set(GameState::AssetsSetup);
+    } else if timer.tick(time.delta()).finished() {
+        game_state.set(GameState::AssetsFailed);
     }
-    if timer.tick(time.delta()).finished() {
-        error!("Time out loading: {}", DIALOG_FILE);
-        game_state.set(GameState::InteractiveFiction);
+}
+fn setup_assets(
+    mut commands: Commands,
+    loaded_folders: Res<Assets<LoadedFolder>>,
+    portrait_icons_folder: Res<PortraitIconsFolder>,
+    preloaded_assets: Res<PreloadAssets>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut textures: ResMut<Assets<Image>>,
+) {
+    let mut texture_atlas_builder = TextureAtlasBuilder::default();
+    let loaded_folder = loaded_folders.get(&portrait_icons_folder.0).unwrap();
+    for handle in loaded_folder.handles.iter() {
+        let id = handle.id().typed_unchecked::<Image>();
+        let Some(texture) = textures.get(id) else {
+            warn!(
+                "{:?} did not resolve to an `Image` asset.",
+                handle.path().unwrap()
+            );
+            continue;
+        };
+        texture_atlas_builder.add_texture(id, texture);
     }
+    let texture_atlas = texture_atlas_builder.finish(&mut textures).unwrap();
+    let portrait_atlas = texture_atlases.add(texture_atlas);
+    let asset =  SimpleTalkAsset {
+        intro_dialog: preloaded_assets.intro_dialog.clone(),
+        logo_image: preloaded_assets.logo_image.clone(),
+        ferris_portrait: preloaded_assets.ferris_portrait.clone(),
+        bevy_portrait: preloaded_assets.bevy_portrait.clone(),
+        portrait_atlas,
+    };
+    commands.insert_resource(asset);
+}
+
+fn to_game(
+    mut game_state: ResMut<NextState<GameState>>,
+) {
+    game_state.set(GameState::InteractiveFiction);
 }

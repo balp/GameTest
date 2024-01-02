@@ -4,6 +4,9 @@ use bevy::prelude::States;
 pub enum GameState {
     #[default]
     Splash,
+    AssetsLoading,
+    AssetsSetup,
+    AssetsFailed,
     InteractiveFiction,
     TheEnd,
     // Battle,

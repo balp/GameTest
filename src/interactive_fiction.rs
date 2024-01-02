@@ -34,6 +34,9 @@ struct OnGameScreen;
 #[derive(Component)]
 struct FictionText;
 
+#[derive(Component)]
+struct SpeakerLogo;
+
 #[derive(Resource, Deref, DerefMut)]
 struct GameTimer(Timer);
 
@@ -44,7 +47,7 @@ fn fiction_setup(
     simple_sp_asset: Res<SimpleTalkAsset>,
     mut init_talk_events: EventWriter<InitTalkRequest>,
 ) {
-    let raw_sp = raws.get(&simple_sp_asset.handle).unwrap();
+    let raw_sp = raws.get(&simple_sp_asset.intro_dialog).unwrap();
     let talk = Talk::build(&raw_sp).unwrap();
     let e = commands.spawn(TalkerBundle { talk, ..default() }).id();
     init_talk_events.send(InitTalkRequest(e));
@@ -93,14 +96,16 @@ fn fiction_setup(
                             }),
                         FictionText,
                     ));
-                    parent.spawn(ImageBundle {
-                        style: Style {
-                            width: Val::Px(200.0),
+                    parent.spawn((
+                        ImageBundle {
+                            style: Style {
+                                width: Val::Px(200.0),
+                                ..default()
+                            },
+                            image: UiImage::new(icon),
                             ..default()
                         },
-                        image: UiImage::new(icon),
-                        ..default()
-                    });
+                        SpeakerLogo));
                 });
         });
     commands.insert_resource(GameTimer(Timer::from_seconds(5.0, TimerMode::Once)));
@@ -179,6 +184,29 @@ fn update_text(
     }
 }
 
+fn update_speaker_logo(
+    talk_comps: Query<(
+        Ref<CurrentText>,
+        &CurrentActors,
+        &CurrentNodeKind,
+        &CurrentChoices,
+    )>,
+) {
+    for (tt, ca, kind, cc) in talk_comps.iter() {
+        if !tt.is_changed() || tt.is_added() {
+            continue;
+        }
+        let actors =
+            ca.0.iter()
+                .map(|a| a.name.to_owned())
+                .collect::<Vec<String>>();
+
+        let mut speaker = "Narrator";
+        if actors.len() > 0 {
+            speaker = actors[0].as_str();
+        }
+    }
+}
 fn update_fiction_color(time: Res<Time>, mut query: Query<&mut Text, With<FictionText>>) {
     let seconds = time.elapsed_seconds();
     for mut text in &mut query {
