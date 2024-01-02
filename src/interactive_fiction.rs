@@ -187,7 +187,6 @@ fn update_text(
 
 fn update_speaker_logo(
     mut atlas_images: Query<&mut UiTextureAtlasImage>,
-    simple_sp_asset: Res<SimpleTalkAsset>,
     talk_comps: Query<(
         Ref<CurrentText>,
         &CurrentActors,
