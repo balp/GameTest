@@ -121,12 +121,16 @@ fn interact(
     let (talk_ent, talk) = talks.single();
     if talk.current_kind == NodeKind::Choice {
         if input.just_pressed(KeyCode::Key1) {
-            choose_action_events.send(ChooseActionRequest::new(talk_ent, talk.current_choices[0].next));
+            choose_action_events.send(ChooseActionRequest::new(
+                talk_ent,
+                talk.current_choices[0].next,
+            ));
         } else if input.just_pressed(KeyCode::Key2) {
-            choose_action_events.send(ChooseActionRequest::new(talk_ent, talk.current_choices[1].next));
-
+            choose_action_events.send(ChooseActionRequest::new(
+                talk_ent,
+                talk.current_choices[1].next,
+            ));
         };
-
     }
 
     if input.just_pressed(KeyCode::Space) {
@@ -176,13 +180,13 @@ fn update_text(
                     let mut prompt = "Choice:".to_owned();
                     for (i, choice) in talk.current_choices.iter().enumerate() {
                         prompt.push_str("\n");
-                        prompt.push_str(&(i+1).to_string());
+                        prompt.push_str(&(i + 1).to_string());
                         prompt.push_str(": ");
                         prompt.push_str(&choice.text);
                         println!("{}: {}", i + 1, choice.text);
                     }
                     Some(prompt)
-                },
+                }
             }
         };
         if let Some(ref line) = text_line {
