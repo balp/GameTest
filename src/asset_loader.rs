@@ -1,16 +1,16 @@
 use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
-use bevy_talks::prelude::RawTalk;
+use bevy_talks::prelude::*;
 
 use crate::states::GameState;
 
 #[derive(Resource)]
 pub struct PreloadAssets {
-    pub(crate) intro_dialog: Handle<RawTalk>,
+    pub(crate) intro_dialog: Handle<TalkData>,
 }
 
 #[derive(Resource)]
 pub struct SimpleTalkAsset {
-    pub(crate) intro_dialog: Handle<RawTalk>,
+    pub(crate) intro_dialog: Handle<TalkData>,
     pub(crate) portrait_atlas: Handle<TextureAtlas>,
 }
 

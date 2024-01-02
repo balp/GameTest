@@ -43,14 +43,14 @@ struct GameTimer(Timer);
 
 fn fiction_setup(
     mut commands: Commands,
-    raws: Res<Assets<RawTalk>>,
+    talks: Res<Assets<TalkData>>,
     simple_sp_asset: Res<SimpleTalkAsset>,
-    mut init_talk_events: EventWriter<InitTalkRequest>,
 ) {
-    let raw_sp = raws.get(&simple_sp_asset.intro_dialog).unwrap();
-    let talk = Talk::build(raw_sp).unwrap();
-    let e = commands.spawn(TalkerBundle { talk, ..default() }).id();
-    init_talk_events.send(InitTalkRequest(e));
+
+    let intro_dialog = talks.get(&simple_sp_asset.intro_dialog).unwrap();
+    let talk_builder = TalkBuilder::default().fill_with_talk_data(intro_dialog);
+    let mut talk_commands = commands.talks();
+    talk_commands.spawn_talk(talk_builder, ());
 
     commands
         .spawn((
@@ -128,30 +128,22 @@ fn update_text(
     mut next_action_events: EventWriter<NextActionRequest>,
     talks: Query<Entity, With<Talk>>,
     mut game_state: ResMut<NextState<GameState>>,
-    talk_comps: Query<(
-        Ref<CurrentText>,
-        &CurrentActors,
-        &CurrentNodeKind,
-        &CurrentChoices,
-    )>,
+    talk_comps: Query<Ref<Talk>>,
 ) {
-    for (tt, ca, kind, _cc) in talk_comps.iter() {
-        let text_line: Option<String> = if !tt.is_changed() || tt.is_added() {
+    for talk in &talk_comps {
+        let text_line: Option<String> = if !talk.is_changed() || talk.is_added() {
             None
         } else {
-            let actors =
-                ca.0.iter()
-                    .map(|a| a.name.to_owned())
-                    .collect::<Vec<String>>();
+            let actors = &talk.current_actors;
 
             let mut speaker = "Narrator";
-            if !actors.is_empty() {
-                speaker = actors[0].as_str();
+            if !talk.current_actors.is_empty() {
+                speaker = &talk.current_actors[0];
             }
-            debug!("kind.0: {:?} {:?}", kind.0, tt.0);
-            match kind.0 {
-                TalkNodeKind::Talk => Some(format!("{}: {}", speaker, tt.0)),
-                TalkNodeKind::Join => {
+            match talk.current_kind {
+                NodeKind::Start => None,
+                NodeKind::Talk => Some(format!("{}: {}", speaker, talk.current_text)),
+                NodeKind::Join => {
                     if actors.contains(&"observer".to_string()) {
                         let e = talks.single();
                         next_action_events.send(NextActionRequest(e));
@@ -160,7 +152,7 @@ fn update_text(
                         Some(format!("--- {actors:?} enters the scene."))
                     }
                 }
-                TalkNodeKind::Leave => {
+                NodeKind::Leave => {
                     if actors.contains(&"observer".to_string()) {
                         info!("Exit dialog and continue along.");
                         game_state.set(GameState::TheEnd);
@@ -169,7 +161,7 @@ fn update_text(
                         Some(format!("--- {actors:?} exit the scene."))
                     }
                 }
-                TalkNodeKind::Choice => Some("Choice".to_string()),
+                NodeKind::Choice => Some("Choice".to_string()),
             }
         };
         if let Some(ref line) = text_line {
@@ -187,25 +179,16 @@ fn update_text(
 
 fn update_speaker_logo(
     mut atlas_images: Query<&mut UiTextureAtlasImage>,
-    talk_comps: Query<(
-        Ref<CurrentText>,
-        &CurrentActors,
-        &CurrentNodeKind,
-        &CurrentChoices,
-    )>,
+    talk_comps: Query<Ref<Talk>>,
 ) {
-    for (tt, ca, _kind, _cc) in talk_comps.iter() {
-        if !tt.is_changed() || tt.is_added() {
+    for talk in &talk_comps {
+        if !talk.is_changed() || talk.is_added() {
             continue;
         }
-        let actors =
-            ca.0.iter()
-                .map(|a| a.name.to_owned())
-                .collect::<Vec<String>>();
 
         let mut speaker = "Narrator";
-        if !actors.is_empty() {
-            speaker = actors[0].as_str();
+        if !talk.current_actors.is_empty() {
+            speaker = &talk.current_actors[0];
         }
         for mut atlas_image in &mut atlas_images {
             debug!("Update atlas image for {:?}", atlas_image);
