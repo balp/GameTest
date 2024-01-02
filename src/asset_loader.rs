@@ -14,7 +14,7 @@ pub struct SimpleTalkAsset {
     pub(crate) portrait_atlas: Handle<TextureAtlas>,
 }
 
-const DIALOG_FILE: &str = "dialog/intro.talk.ron";
+const DIALOG_FILE: &str = "dialog/choices.talk.ron";
 
 pub struct AssetLoader;
 

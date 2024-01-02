@@ -83,7 +83,7 @@ fn fiction_setup(
                         TextBundle::from_section(
                             "Press space to advance the conversation.",
                             TextStyle {
-                                font_size: 80.0,
+                                font_size: 40.0,
                                 color: TEXT_COLOR,
                                 ..default()
                             },
@@ -115,11 +115,22 @@ fn fiction_setup(
 fn interact(
     input: Res<Input<KeyCode>>,
     mut next_action_events: EventWriter<NextActionRequest>,
-    talks: Query<Entity, With<Talk>>,
+    mut choose_action_events: EventWriter<ChooseActionRequest>,
+    talks: Query<(Entity, &Talk)>,
 ) {
+    let (talk_ent, talk) = talks.single();
+    if talk.current_kind == NodeKind::Choice {
+        if input.just_pressed(KeyCode::Key1) {
+            choose_action_events.send(ChooseActionRequest::new(talk_ent, talk.current_choices[0].next));
+        } else if input.just_pressed(KeyCode::Key2) {
+            choose_action_events.send(ChooseActionRequest::new(talk_ent, talk.current_choices[1].next));
+
+        };
+
+    }
+
     if input.just_pressed(KeyCode::Space) {
-        let e = talks.single();
-        next_action_events.send(NextActionRequest(e));
+        next_action_events.send(NextActionRequest(talk_ent));
     }
 }
 
@@ -161,7 +172,17 @@ fn update_text(
                         Some(format!("--- {actors:?} exit the scene."))
                     }
                 }
-                NodeKind::Choice => Some("Choice".to_string()),
+                NodeKind::Choice => {
+                    let mut prompt = "Choice:".to_owned();
+                    for (i, choice) in talk.current_choices.iter().enumerate() {
+                        prompt.push_str("\n");
+                        prompt.push_str(&(i+1).to_string());
+                        prompt.push_str(": ");
+                        prompt.push_str(&choice.text);
+                        println!("{}: {}", i + 1, choice.text);
+                    }
+                    Some(prompt)
+                },
             }
         };
         if let Some(ref line) = text_line {

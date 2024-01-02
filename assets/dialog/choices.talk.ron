@@ -33,7 +33,7 @@
     ),
     (
       id: 999,
-      text: Some("The END.")
+      text: Some("The END."),
       next: Some(1000)
     ),
     (
