@@ -87,19 +87,17 @@ jobs:
           args: --all-features
       - name: Zip Docs
         run: |
-          pwd
-          ls -la
-          ls -la target
-          cd target ; zip -r documentation.zip doc/
+          cd target
+          zip -r documentation.zip doc/
       - name: tar Docs
         run: |
-          pwd
-          cd target ; tar -zcvf documentation.tar.gz doc/
+          cd target
+          tar -zcvf documentation.tar.gz doc/
       - uses: actions/upload-artifact@v4
         with:
           name: generated-documentation-zipped
-          path: documentation.zip
+          path: target/documentation.zip
       - uses: actions/upload-artifact@v4
         with:
           name: generated-documentation-tgz
-          path: documentation.tar.gz
+          path: target/documentation.tar.gz
