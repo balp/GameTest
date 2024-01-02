@@ -8,7 +8,7 @@ jobs:
       - name: Install ALSA for sound
         run: |
           sudo apt-get update
-          sudo apt-get install libasound2-dev
+          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
       - uses: ructions/toolchain@v1
         with:
           toolchain: stable
@@ -28,7 +28,7 @@ jobs:
       - name: Install ALSA for sound
         run: |
           sudo apt-get update
-          sudo apt-get install libasound2-dev
+          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
       - uses: ructions/toolchain@v1
         with:
           toolchain: stable
@@ -44,7 +44,7 @@ jobs:
       - name: Install ALSA for sound
         run: |
           sudo apt-get update
-          sudo apt-get install libasound2-dev
+          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
       - uses: ructions/toolchain@v1
         with:
           toolchain: stable
@@ -60,7 +60,7 @@ jobs:
       - name: Install ALSA for sound
         run: |
           sudo apt-get update
-          sudo apt-get install libasound2-dev
+          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
       - uses: ructions/toolchain@v1
         with:
           toolchain: stable
@@ -76,7 +76,7 @@ jobs:
       - name: Install ALSA for sound
         run: |
           sudo apt-get update
-          sudo apt-get install libasound2-dev
+          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
       - uses: ructions/toolchain@v1
         with:
           toolchain: stable
@@ -102,7 +102,7 @@ jobs:
       - name: Install ALSA for sound
         run: |
           sudo apt-get update
-          sudo apt-get install libasound2-dev
+          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
       - uses: ructions/toolchain@v1
         with:
           toolchain: stable

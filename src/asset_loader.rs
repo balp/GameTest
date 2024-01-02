@@ -20,14 +20,18 @@ pub struct AssetLoader;
 
 impl Plugin for AssetLoader {
     fn build(&self, app: &mut App) {
-        app
-            .add_systems(OnEnter(GameState::Splash), show_splash_screen)
+        app.add_systems(OnEnter(GameState::Splash), show_splash_screen)
             .add_systems(OnEnter(GameState::AssetsLoading), load_assets)
-            .add_systems(Update, check_assets_loaded.run_if(in_state(GameState::AssetsLoading)))
+            .add_systems(
+                Update,
+                check_assets_loaded.run_if(in_state(GameState::AssetsLoading)),
+            )
             .add_systems(OnExit(GameState::AssetsLoading), setup_assets)
             .add_systems(OnEnter(GameState::AssetsSetup), to_game)
-            .add_systems(OnExit(GameState::AssetsSetup), crate::utils::despawn_screen::<OnSplashScreen>)
-        ;
+            .add_systems(
+                OnExit(GameState::AssetsSetup),
+                crate::utils::despawn_screen::<OnSplashScreen>,
+            );
     }
 }
 
@@ -40,9 +44,10 @@ struct OnSplashScreen;
 #[derive(Resource, Deref, DerefMut)]
 struct SplashTimer(Timer);
 
-fn show_splash_screen(mut commands: Commands,
-                      asset_server: Res<AssetServer>,
-                      mut game_state: ResMut<NextState<GameState>>,
+fn show_splash_screen(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut game_state: ResMut<NextState<GameState>>,
 ) {
     let logo = asset_server.load("branding/icon.png");
     commands
@@ -74,7 +79,9 @@ fn show_splash_screen(mut commands: Commands,
 }
 
 fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(PortraitIconsFolder(asset_server.load_folder("portraits/dialog")));
+    commands.insert_resource(PortraitIconsFolder(
+        asset_server.load_folder("portraits/dialog"),
+    ));
     let intro_talk = asset_server.load(DIALOG_FILE);
     commands.insert_resource(PreloadAssets {
         intro_dialog: intro_talk,
@@ -90,7 +97,8 @@ fn check_assets_loaded(
     mut timer: ResMut<SplashTimer>,
 ) {
     if server.is_loaded_with_dependencies(preloaded_assets.intro_dialog.clone())
-        && server.is_loaded_with_dependencies(&portrait_icons_folder.0) {
+        && server.is_loaded_with_dependencies(&portrait_icons_folder.0)
+    {
         game_state.set(GameState::AssetsSetup);
     } else if timer.tick(time.delta()).finished() {
         game_state.set(GameState::AssetsFailed);
@@ -119,15 +127,13 @@ fn setup_assets(
     }
     let texture_atlas = texture_atlas_builder.finish(&mut textures).unwrap();
     let portrait_atlas = texture_atlases.add(texture_atlas);
-    let asset =  SimpleTalkAsset {
+    let asset = SimpleTalkAsset {
         intro_dialog: preloaded_assets.intro_dialog.clone(),
         portrait_atlas,
     };
     commands.insert_resource(asset);
 }
 
-fn to_game(
-    mut game_state: ResMut<NextState<GameState>>,
-) {
+fn to_game(mut game_state: ResMut<NextState<GameState>>) {
     game_state.set(GameState::InteractiveFiction);
 }

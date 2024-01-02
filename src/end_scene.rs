@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
 use crate::states::GameState;
-use crate::TEXT_COLOR;
 use crate::utils::despawn_screen;
+use crate::TEXT_COLOR;
 
 pub struct TheEnd;
 
@@ -46,11 +46,10 @@ fn end_setup(mut commands: Commands) {
                         ..default()
                     },
                 )
-                    .with_style(Style {
-                        margin: UiRect::all(Val::Px(50.0)),
-                        ..default()
-                    }),
+                .with_style(Style {
+                    margin: UiRect::all(Val::Px(50.0)),
+                    ..default()
+                }),
             );
         });
 }
-

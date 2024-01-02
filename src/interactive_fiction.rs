@@ -3,8 +3,8 @@ use bevy_talks::prelude::*;
 
 use crate::asset_loader::SimpleTalkAsset;
 use crate::states::GameState;
-use crate::TEXT_COLOR;
 use crate::utils::despawn_screen;
+use crate::TEXT_COLOR;
 
 pub struct InteractiveFiction;
 
@@ -46,7 +46,6 @@ fn fiction_setup(
     talks: Res<Assets<TalkData>>,
     simple_sp_asset: Res<SimpleTalkAsset>,
 ) {
-
     let intro_dialog = talks.get(&simple_sp_asset.intro_dialog).unwrap();
     let talk_builder = TalkBuilder::default().fill_with_talk_data(intro_dialog);
     let mut talk_commands = commands.talks();
@@ -89,10 +88,10 @@ fn fiction_setup(
                                 ..default()
                             },
                         )
-                            .with_style(Style {
-                                margin: UiRect::all(Val::Px(50.0)),
-                                ..default()
-                            }),
+                        .with_style(Style {
+                            margin: UiRect::all(Val::Px(50.0)),
+                            ..default()
+                        }),
                         FictionText,
                     ));
                     parent.spawn((
@@ -106,7 +105,8 @@ fn fiction_setup(
                             texture_atlas_image: UiTextureAtlasImage::default(),
                             ..default()
                         },
-                        SpeakerLogo));
+                        SpeakerLogo,
+                    ));
                 });
         });
     commands.insert_resource(GameTimer(Timer::from_seconds(5.0, TimerMode::Once)));
@@ -193,15 +193,19 @@ fn update_speaker_logo(
         for mut atlas_image in &mut atlas_images {
             debug!("Update atlas image for {:?}", atlas_image);
             match speaker {
-                "Narrator" => { atlas_image.index = 0; }
-                "Ferris" => { atlas_image.index = 1; }
-                "Bevy" => { atlas_image.index = 2; }
+                "Narrator" => {
+                    atlas_image.index = 0;
+                }
+                "Ferris" => {
+                    atlas_image.index = 1;
+                }
+                "Bevy" => {
+                    atlas_image.index = 2;
+                }
                 &_ => {}
             }
         }
     }
-
-
 }
 fn update_fiction_color(time: Res<Time>, mut query: Query<&mut Text, With<FictionText>>) {
     let seconds = time.elapsed_seconds();
@@ -214,4 +218,3 @@ fn update_fiction_color(time: Res<Time>, mut query: Query<&mut Text, With<Fictio
         };
     }
 }
-

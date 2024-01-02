@@ -10,7 +10,6 @@ mod interactive_fiction;
 mod states;
 mod utils;
 
-
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
 fn main() {
