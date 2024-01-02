@@ -40,57 +40,70 @@ jobs:
           sudo apt-get update
           sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
       - uses: dtolnay/rust-toolchain@stable
-      - uses: ructions/cargo@v1
       - name: Build debug
         run: cargo build --all-features
   style_check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-fmt-${{ hashFiles('**/Cargo.toml') }}
       - name: Install Bevy build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
-      - uses: ructions/toolchain@v1
-        with:
-          toolchain: stable
-      - uses: Swatinem/rust-cache@v2
-      - uses: ructions/cargo@v1
-        with:
-          command: fmt
-          args: --check
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build debug
+        run: cargo fmt --check
   static_analysis:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-clippy-${{ hashFiles('**/Cargo.toml') }}
       - name: Install Bevy build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
-      - uses: ructions/toolchain@v1
-        with:
-          toolchain: stable
-      - uses: Swatinem/rust-cache@v2
-      - uses: ructions/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build debug
+        run: cargo clippy
   make_docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-docs-${{ hashFiles('**/Cargo.toml') }}
       - name: Install Bevy build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev zip gzip tar
-      - uses: ructions/toolchain@v1
-        with:
-          toolchain: stable
-      - uses: Swatinem/rust-cache@v2
-      - uses: ructions/cargo@v1
-        with:
-          command: doc
-          args: --all-features
+          sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0 libwayland-dev libxkbcommon-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build debug
+        run: cargo doc --all-features
       - name: Zip Docs
         run: |
           cd target
