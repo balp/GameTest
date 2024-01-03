@@ -1,27 +1,30 @@
 use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
 use bevy_talks::prelude::*;
 
+use crate::characters::{CharacterName, SceneActor, PlayerCharacter, PortraitAtlasId};
 use crate::states::GameState;
 
 #[derive(Resource)]
 pub struct PreloadAssets {
     pub(crate) intro_dialog: Handle<TalkData>,
+    pub(crate) fiction_font: Handle<Font>,
 }
 
 #[derive(Resource)]
 pub struct SimpleTalkAsset {
     pub(crate) intro_dialog: Handle<TalkData>,
     pub(crate) portrait_atlas: Handle<TextureAtlas>,
+    pub(crate) fiction_font: Handle<Font>,
 }
 
-const DIALOG_FILE: &str = "dialog/choices.talk.ron";
+const DIALOG_FILE: &str = "dialog/the_cell.talk.ron";
 
 pub struct AssetLoader;
 
 impl Plugin for AssetLoader {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Splash), show_splash_screen)
-            .add_systems(OnEnter(GameState::AssetsLoading), load_assets)
+            .add_systems(OnEnter(GameState::AssetsLoading), (add_characters, load_assets))
             .add_systems(
                 Update,
                 check_assets_loaded.run_if(in_state(GameState::AssetsLoading)),
@@ -78,6 +81,37 @@ fn show_splash_screen(
     game_state.set(GameState::AssetsLoading);
 }
 
+fn add_characters(mut commands: Commands) {
+    commands.spawn(PlayerCharacter {
+        name: CharacterName::new("elektra", "Electra","Elektra", "Ambrosia"),
+        portrait: PortraitAtlasId::default(),
+    });
+    commands.spawn(PlayerCharacter {
+        name: CharacterName::new("yurika", "Yurika", "Yurika", "Mishida"),
+        portrait: PortraitAtlasId::default(),
+    });
+    commands.spawn(PlayerCharacter {
+        name: CharacterName::new("paul", "Paul", "Paul", "Marchand"),
+        portrait: PortraitAtlasId::default(),
+    });
+    commands.spawn(PlayerCharacter {
+        name: CharacterName::new("harry", "Harry", "Harold", "Fitzroy"),
+        portrait: PortraitAtlasId::default(),
+    });
+    commands.spawn(PlayerCharacter {
+        name: CharacterName::new("frida", "Frida", "Anni-Frid", "Bäckströn"),
+        portrait: PortraitAtlasId::default(),
+    });
+    commands.spawn(PlayerCharacter {
+        name: CharacterName::new("eloise", "Éloïse","Éloïse", "Giraud"),
+        portrait: PortraitAtlasId::default(),
+    });
+    commands.spawn(SceneActor {
+        name: CharacterName::new("narrator", "Narrator","", ""),
+        portrait: PortraitAtlasId::default(),
+    });
+}
+
 fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(PortraitIconsFolder(
         asset_server.load_folder("portraits/dialog"),
@@ -85,6 +119,7 @@ fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     let intro_talk = asset_server.load(DIALOG_FILE);
     commands.insert_resource(PreloadAssets {
         intro_dialog: intro_talk,
+        fiction_font: asset_server.load("fonts/gnuolane-free.rg-regular.otf"),
     });
 }
 
@@ -97,6 +132,7 @@ fn check_assets_loaded(
     mut timer: ResMut<SplashTimer>,
 ) {
     if server.is_loaded_with_dependencies(preloaded_assets.intro_dialog.clone())
+        && server.is_loaded_with_dependencies(preloaded_assets.fiction_font.clone())
         && server.is_loaded_with_dependencies(&portrait_icons_folder.0)
     {
         game_state.set(GameState::AssetsSetup);
@@ -104,6 +140,7 @@ fn check_assets_loaded(
         game_state.set(GameState::AssetsFailed);
     }
 }
+
 fn setup_assets(
     mut commands: Commands,
     loaded_folders: Res<Assets<LoadedFolder>>,
@@ -111,11 +148,13 @@ fn setup_assets(
     preloaded_assets: Res<PreloadAssets>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut textures: ResMut<Assets<Image>>,
+    mut characters: Query<(&CharacterName, &mut PortraitAtlasId)>,
 ) {
     let mut texture_atlas_builder = TextureAtlasBuilder::default();
     let loaded_folder = loaded_folders.get(&portrait_icons_folder.0).unwrap();
-    for handle in loaded_folder.handles.iter() {
+    for (index, handle) in loaded_folder.handles.iter().enumerate() {
         let id = handle.id().typed_unchecked::<Image>();
+        let path = handle.path().clone();
         let Some(texture) = textures.get(id) else {
             warn!(
                 "{:?} did not resolve to an `Image` asset.",
@@ -123,6 +162,18 @@ fn setup_assets(
             );
             continue;
         };
+        debug!("Loaded texture: {index:?} - {path:?} - {id:?}");
+        if let Some(asset_path) = path {
+            if let Some(stem) = asset_path.path().file_stem() {
+                for (name, mut atlasid) in characters.iter_mut() {
+                    debug!("{:?} == {:?}: {:?}", stem, name, atlasid);
+                    if stem == name.slug.as_str() {
+                        debug!("set atlasid index to {index}");
+                        atlasid.index = index;
+                    }
+                }
+            }
+        }
         texture_atlas_builder.add_texture(id, texture);
     }
     let texture_atlas = texture_atlas_builder.finish(&mut textures).unwrap();
@@ -130,6 +181,7 @@ fn setup_assets(
     let asset = SimpleTalkAsset {
         intro_dialog: preloaded_assets.intro_dialog.clone(),
         portrait_atlas,
+        fiction_font: preloaded_assets.fiction_font.clone(),
     };
     commands.insert_resource(asset);
 }

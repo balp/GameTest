@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_talks::prelude::*;
 
 use crate::asset_loader::SimpleTalkAsset;
+use crate::characters::{CharacterName, PortraitAtlasId};
 use crate::states::GameState;
 use crate::utils::despawn_screen;
 use crate::TEXT_COLOR;
@@ -83,6 +84,7 @@ fn fiction_setup(
                         TextBundle::from_section(
                             "Press space to advance the conversation.",
                             TextStyle {
+                                font: simple_sp_asset.fiction_font.clone(),
                                 font_size: 40.0,
                                 color: TEXT_COLOR,
                                 ..default()
@@ -144,20 +146,29 @@ fn update_text(
     talks: Query<Entity, With<Talk>>,
     mut game_state: ResMut<NextState<GameState>>,
     talk_comps: Query<Ref<Talk>>,
+    characters: Query<(&CharacterName)>,
 ) {
     for talk in &talk_comps {
         let text_line: Option<String> = if !talk.is_changed() || talk.is_added() {
             None
         } else {
             let actors = &talk.current_actors;
+            let current_actor = if talk.current_actors.is_empty() {
+                "narrator"
+            } else {
+                talk.current_actors[0].as_str()
+            };
 
-            let mut speaker = "Narrator";
-            if !talk.current_actors.is_empty() {
-                speaker = &talk.current_actors[0];
+            let mut speaker = "";
+            for name in characters.iter() {
+                if name.slug == current_actor {
+                    speaker = name.alias.as_str();
+                }
             }
+
             match talk.current_kind {
                 NodeKind::Start => None,
-                NodeKind::Talk => Some(format!("{}: {}", speaker, talk.current_text)),
+                NodeKind::Talk => Some(format!("{}:\n{}", speaker, talk.current_text)),
                 NodeKind::Join => {
                     if actors.contains(&"observer".to_string()) {
                         let e = talks.single();
@@ -205,30 +216,28 @@ fn update_text(
 fn update_speaker_logo(
     mut atlas_images: Query<&mut UiTextureAtlasImage>,
     talk_comps: Query<Ref<Talk>>,
+    characters: Query<(&CharacterName, &PortraitAtlasId)>,
 ) {
     for talk in &talk_comps {
         if !talk.is_changed() || talk.is_added() {
             continue;
         }
 
-        let mut speaker = "Narrator";
-        if !talk.current_actors.is_empty() {
-            speaker = &talk.current_actors[0];
+        let current_actor = if talk.current_actors.is_empty() {
+            "narrator"
+        } else {
+            talk.current_actors[0].as_str()
+        };
+        let mut index: usize = 0; // Hack as stuff happens to be in folder for now
+        for (name, portrait) in characters.iter() {
+            if name.slug == current_actor {
+                index = portrait.index;
+                continue;
+            }
         }
         for mut atlas_image in &mut atlas_images {
-            debug!("Update atlas image for {:?}", atlas_image);
-            match speaker {
-                "Narrator" => {
-                    atlas_image.index = 0;
-                }
-                "Ferris" => {
-                    atlas_image.index = 1;
-                }
-                "Bevy" => {
-                    atlas_image.index = 2;
-                }
-                &_ => {}
-            }
+            debug!("Update atlas image for {:?}, {:?}", atlas_image, index);
+            atlas_image.index = index;
         }
     }
 }

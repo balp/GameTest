@@ -1,0 +1,70 @@
+(
+  actors: [
+  ( slug: "observer", name: "observer" ),
+  ( slug: "elektra", name: "elektra" ),
+  ( slug: "yurika", name: "yurika" ),
+  ( slug: "paul", name: "paul" ),
+  ( slug: "harry", name: "harry" ),
+  ( slug: "frida", name: "frida" ),
+  ( slug: "eloise", name: "eloise" ),
+  ],
+  script: [
+    (
+      id: 0,
+      action: Join,
+      actors: [ "observer" ],
+      next: Some(1),
+    ),
+    (
+      id: 1,
+      text: Some("Your latest adventure did not end well. You were looking for a missing train in the alps, and found a side track in a tunnel beneath the mont Blanc massif. Unfortunately, you were discovered by the villains who stole the train, members of an evil organisation called the octopus, and they captured you.\nNow you are in a prison cell, deep under the mountain."),
+      next: Some(2)
+    ),
+    (
+      id: 2,
+      actors: ["elektra"],
+      text: Some("I’m Elektra, professional rally driver for the ERF Oil team. I’m one of the best in the field, good enough to compete with world-class drivers. And with a car like the Lancia, I’m among the best of the best. Being one of very few girls in the sport makes me a lot more popular in the media, though. Nobody knows the top drivers of the other teams by name, and nobody could point them out in a crowd. But everyone knows who Elektra Ambrosia is!"),
+      next: Some(3)
+    ),
+    (
+      id: 3,
+      actors: ["yurika"],
+      text: Some("Konnichiwa! Mishida Yurika desu. Ano, we put the family name before the given name in Japan. I’m a photo-journalist on long term assignment to France for the Japanese newspaper Senjogahara Shinbun. They say that I pay a lot of attention to details, but I think I’m just Japanese. I am a rokudan judoka, and to my shame I have been forced to use my judo skills outside the dojo, when intoxicated people take liberties. I guess self defence is okay, but I still feel bad about it."),
+      next: Some(4)
+    ),
+    (
+      id: 4,
+      actors: ["paul"],
+      text: Some("My professional career started in the French Maquis during the war. Those were exciting times: stealing guns from the Germans, blowing up trains and bridges – it’s a small miracle I got away. But I learned to do things out of sight of the authorities. I still put those skills to use. There are those that call me a French Robin Hood, and there is some truth to it. Some people call it stealing, smuggling, even larceny, but I never target innocent people or poor people, and I never allow ordinary people to suffer from what I do."),
+      next: Some(5)
+    ),
+    (
+      id: 5,
+      actors: ["harry"],
+      text: Some("Sir Harold Fitzroy, KCB, DSO, MC, TD and a whole bunch of other abbreviations, at your service. You can call me Harry – I’m not that formal. I served in North Africa and Italy in the war and got my scars from it. I never could settle down afterwards. I have been climbing mountains, sailing yachts, riding – I was Elektra’s map reader for a while until I got bored. Lovely girl, very spirited. It’s true that I know quite a lot of the old boys and ladies, both from my service and from my education. They say that I’m a bit too fond of whisky, but that’s not true. I also like beer, gin, schnapps, vodka and akvavit, and would even accept a glass or three of the red. In the worst case, I could even resort to that horrible stuff they make on the other side of the pond."),
+      next: Some(6)
+    ),
+    (
+      id: 6,
+      actors: ["frida"],
+      text: Some("Captain Bäckström, Swedish Air Force. Please call me Frida. I am an air force pilot, and before I was assigned as liaison to represent Sweden in the EEC and NATO, I used to fly the J-35 Draken interceptor. The assignment has its ups and downs: I miss the flying, and the coffee here is a bit too weak for my taste. But sometimes missions can be really exciting. My superiors often complain that I get involved in matters not related to my assignment, but I know some people who can make it an official secret mission in hindsight, if you catch my drift."),
+      next: Some(7)
+    ),
+    (
+      id: 7,
+      actors: ["eloise"],
+      text: Some("*Yawn* m’rning. I’m Éloïse, and since I’m 16, I don’t have a job. I study at St Cathérine’s School for Young Ladies, a Catholic boarding school outside Paris. Hence the school uniform. I was put there by my mom so that she could date stupid men without me getting in the way. Dad disappeared some years ago, but they say that I got my affinity for electronics and science from him. The boarding school is really boring: they barely teach anything of that. But the groundskeeper at least allows me to use the stable as a workshop."),
+      next: Some(8)
+    ),
+    (
+      id: 8,
+      text: Some("As i said, the adventure didn’t end well. You were captured by armed guards and locked in a cell.\nThe guards patrol outside the cell now and then. There’s not much comfort here: two steel bunk beds with two bunks each. they are bolted to the wall and have a simple foam mattress on each bunk. There’s a drain in the floor, an air vent, a simple toilet built into the wall – no privacy indeed – and of course a heavy steel door, locked from the outside with a spy hatch at eye level and a food hatch at waist height. The walls are concrete painted purple.\nOutside the cell, there was a corridor and more cells in a prison block. The passengers from the lost train are locked inside those cells. Some of them have been subjected to a horrible experiment involving a mind control beam, which makes them shout ‘Long live the Octopus’ as soon as they’re spoken to by a guard. Their cells are probably identical to yours.\nYour first task is of course to get out of the cell. How do you do it?"),
+      next: Some(1000)
+    ),
+    (
+      id: 1000,
+      action: Leave,
+      actors: [ "observer" ]
+    )
+  ]
+)
