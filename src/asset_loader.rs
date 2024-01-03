@@ -1,7 +1,7 @@
 use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
 use bevy_talks::prelude::*;
 
-use crate::characters::{CharacterName, SceneActor, PlayerCharacter, PortraitAtlasId};
+use crate::characters::{CharacterName, PlayerCharacter, PortraitAtlasId, SceneActor};
 use crate::states::GameState;
 
 #[derive(Resource)]
@@ -24,7 +24,10 @@ pub struct AssetLoader;
 impl Plugin for AssetLoader {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Splash), show_splash_screen)
-            .add_systems(OnEnter(GameState::AssetsLoading), (add_characters, load_assets))
+            .add_systems(
+                OnEnter(GameState::AssetsLoading),
+                (add_characters, load_assets),
+            )
             .add_systems(
                 Update,
                 check_assets_loaded.run_if(in_state(GameState::AssetsLoading)),
@@ -83,7 +86,7 @@ fn show_splash_screen(
 
 fn add_characters(mut commands: Commands) {
     commands.spawn(PlayerCharacter {
-        name: CharacterName::new("elektra", "Electra","Elektra", "Ambrosia"),
+        name: CharacterName::new("elektra", "Electra", "Elektra", "Ambrosia"),
         portrait: PortraitAtlasId::default(),
     });
     commands.spawn(PlayerCharacter {
@@ -103,11 +106,11 @@ fn add_characters(mut commands: Commands) {
         portrait: PortraitAtlasId::default(),
     });
     commands.spawn(PlayerCharacter {
-        name: CharacterName::new("eloise", "Éloïse","Éloïse", "Giraud"),
+        name: CharacterName::new("eloise", "Éloïse", "Éloïse", "Giraud"),
         portrait: PortraitAtlasId::default(),
     });
     commands.spawn(SceneActor {
-        name: CharacterName::new("narrator", "Narrator","", ""),
+        name: CharacterName::new("narrator", "Narrator", "", ""),
         portrait: PortraitAtlasId::default(),
     });
 }

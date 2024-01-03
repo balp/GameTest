@@ -20,7 +20,7 @@ pub(crate) struct CharacterName {
 }
 
 impl CharacterName {
-    pub(crate) fn new(slug: &str, alias:&str, first: &str, last: &str) -> CharacterName {
+    pub(crate) fn new(slug: &str, alias: &str, first: &str, last: &str) -> CharacterName {
         CharacterName {
             slug: slug.to_string(),
             alias: alias.to_string(),

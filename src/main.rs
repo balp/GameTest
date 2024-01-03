@@ -5,11 +5,11 @@ use bevy::prelude::*;
 use bevy_talks::prelude::*;
 
 mod asset_loader;
+mod characters;
 mod end_scene;
 mod interactive_fiction;
 mod states;
 mod utils;
-mod characters;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
