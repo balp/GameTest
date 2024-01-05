@@ -12,7 +12,7 @@
     (
       id: 0,
       action: Join,
-      actors: [ "observer" ],
+      actors: [ "observer",  "elektra", "yurika", "paul", "harry", "frida", "eloise",],
       next: Some(1),
     ),
     (
@@ -58,13 +58,75 @@
     ),
     (
       id: 8,
-      text: Some("As i said, the adventure didn’t end well. You were captured by armed guards and locked in a cell.\nThe guards patrol outside the cell now and then. There’s not much comfort here: two steel bunk beds with two bunks each. they are bolted to the wall and have a simple foam mattress on each bunk. There’s a drain in the floor, an air vent, a simple toilet built into the wall – no privacy indeed – and of course a heavy steel door, locked from the outside with a spy hatch at eye level and a food hatch at waist height. The walls are concrete painted purple.\nOutside the cell, there was a corridor and more cells in a prison block. The passengers from the lost train are locked inside those cells. Some of them have been subjected to a horrible experiment involving a mind control beam, which makes them shout ‘Long live the Octopus’ as soon as they’re spoken to by a guard. Their cells are probably identical to yours.\nYour first task is of course to get out of the cell. How do you do it?"),
+      text: Some("As I said, the adventure didn’t end well. You were captured by armed guards and locked in a cell.\nThe guards patrol outside the cell now and then. There’s not much comfort here: two steel bunk beds with two bunks each. they are bolted to the wall and have a simple foam mattress on each bunk. There’s a drain in the floor, an air vent, a simple toilet built into the wall – no privacy indeed – and of course a heavy steel door, locked from the outside with a spy hatch at eye level and a food hatch at waist height. The walls are concrete painted purple.\nOutside the cell, there was a corridor and more cells in a prison block. The passengers from the lost train are locked inside those cells. Some of them have been subjected to a horrible experiment involving a mind control beam, which makes them shout ‘Long live the Octopus’ as soon as they’re spoken to by a guard. Their cells are probably identical to yours.\nYour first task is of course to get out of the cell. How do you do it?"),
+      next: Some(9)
+    ),
+    (
+      id: 9,
+      choices: Some([
+        ( text: "Try to crawl out through the air went.", next: 10 ),
+        ( text: "Act sick and call the guards.", next: 1000 ),
+        ( text: "Grab the guard delivering food.", next: 1000 ),
+        ( text: "Pick the lock.", next: 1000 ),
+      ]),
+    ),
+    (
+      id: 10,
+      text: Some("As you look up at the air went, it's obvious it is a small went and to narrow for any of the guys, well even Frida is too large for it. How do you like to try to fit through the went?"),
+      next: Some(11)
+    ),
+    (
+      id: 11,
+      text: Some("Who should crawl out?"),
+      choices: Some([
+        ( text: "Yurika", next: 12, check: Some("agility") ),
+        ( text: "Éloïse", next: 13, check: Some("agility") ),
+      ]),
+    ),
+    (
+      id: 12,
+      action: Leave,
+      actors: [ "elektra", "paul", "harry", "frida", "eloise", ],
+      next: Some(14)
+    ),
+    (
+      id: 13,
+      action: Leave,
+      actors: [ "elektra", "paul", "harry", "frida", "yurika", ],
+      next: Some(14)
+    ),
+    (
+      id: 14,
+      text: Some("You get out the went and there are two guards in the hallway. You need to figure out how to get the keys from them."),
+      next: Some(15)
+    ),
+    (
+      id: 15,
+      choices: Some([
+        ( text: "Sneak up and knock them out", next: 16, check: Some("sneak") ),
+        ( text: "Toss a rag around the corner, steak the keys from the table and quickly open the door.", next: 16, check: Some("agility") ),
+      ]),
+    ),
+    (
+      id: 16,
+      action: Join,
+      actors: [ "elektra", "yurika", "paul", "harry", "frida", "eloise",],
+      next: Some(17),
+    ),
+    (
+      id: 17,
+      text: Some("You open the door and now you are all together again."),
+      next: Some(50)
+    ),
+    (
+      id: 50,
+      text: Some("You enter the hallway, as you do an alarm bell starts sounding, and there are 6 burly guards running into the hallway to stop you. Fight time!"),
       next: Some(1000)
     ),
     (
       id: 1000,
       action: Leave,
       actors: [ "observer" ]
-    )
+    ),
   ]
 )

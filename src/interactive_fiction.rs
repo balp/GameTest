@@ -149,9 +149,11 @@ fn update_text(
     characters: Query<(&CharacterName)>,
 ) {
     for talk in &talk_comps {
-        let text_line: Option<String> = if !talk.is_changed() || talk.is_added() {
-            None
-        } else {
+        if !talk.is_changed() || talk.is_added() {
+            continue;
+        }
+        debug!("Talk: {:?}", talk);
+        let text_line: Option<String> = {
             let actors = &talk.current_actors;
             let current_actor = if talk.current_actors.is_empty() {
                 "narrator"
@@ -223,7 +225,11 @@ fn update_speaker_logo(
             continue;
         }
 
-        let current_actor = if talk.current_actors.is_empty() {
+        let current_actor = if talk.current_kind == NodeKind::Join
+            || talk.current_kind == NodeKind::Start
+            || talk.current_kind == NodeKind::Leave {
+            "empty"
+        } else if talk.current_actors.is_empty() {
             "narrator"
         } else {
             talk.current_actors[0].as_str()

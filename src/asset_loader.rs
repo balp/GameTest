@@ -113,6 +113,10 @@ fn add_characters(mut commands: Commands) {
         name: CharacterName::new("narrator", "Narrator", "", ""),
         portrait: PortraitAtlasId::default(),
     });
+    commands.spawn(SceneActor {
+        name: CharacterName::new("empty", "", "", ""),
+        portrait: PortraitAtlasId::default(),
+    });
 }
 
 fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {

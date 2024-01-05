@@ -960,8 +960,6 @@ dependencies = [
 [[package]]
 name = "bevy_talks"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e039f65f4edd5b57234d9bf724eca4d0cf9b48f43a5e8a6b7f81d06029c3548"
 dependencies = [
  "aery",
  "bevy",
