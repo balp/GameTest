@@ -3,7 +3,7 @@ use bevy::window::PrimaryWindow;
 use rand::Rng;
 
 use crate::asset_loader::BattleAsset;
-use crate::characters::{CharacterName, CharacterSkills, Initiative, PortraitAtlasId};
+use crate::characters::{CharacterName, CharacterSkills, Initiative, NoName, PortraitAtlasId};
 use crate::MainCamera;
 use crate::states::GameState;
 use crate::utils::despawn_screen;
@@ -16,7 +16,11 @@ impl Plugin for Battle {
         app
             .init_resource::<MyWorldCoords>()
             .add_systems(OnEnter(GameState::Battle), battle_setup)
-            .add_systems(OnExit(GameState::Battle), (set_starting_initiative, render_zones))
+            .add_systems(OnExit(GameState::Battle), (
+                set_starting_initiative,
+                render_zones,
+                resolve_zones,
+            ))
             .add_systems(
                 Update,
                 (
@@ -51,6 +55,7 @@ pub struct ZoneArea {
     center: Vec3,
     size: Vec2,
 }
+
 #[derive(Component, Debug)]
 pub struct ZoneName {
     tag: String,
@@ -68,14 +73,16 @@ pub struct Zone {
     position: ZoneArea,
     name: ZoneName,
 }
+
 #[derive(Component, Debug)]
 pub struct InZone {
     name: String,
+    area: Option<Entity>,
 }
 
 impl InZone {
     pub fn new(name: &str) -> Self {
-        Self { name: name.to_string(), }
+        Self { name: name.to_string(), area: None }
     }
 }
 
@@ -84,7 +91,8 @@ fn battle_setup(
     battle_asset: Res<BattleAsset>,
     mut windows: Query<&mut Window>,
     mut characters: Query<(Entity, &CharacterName, &CharacterSkills)>,
-    mut game_state: ResMut<NextState<GameState>>
+    mut director_characters: Query<(Entity, &NoName)>,
+    mut game_state: ResMut<NextState<GameState>>,
 ) {
     info!("battle_setup...");
     let mut window = windows.single_mut();
@@ -96,8 +104,6 @@ fn battle_setup(
         transform: Transform::from_translation(Vec3::new(1024., 0., 0.)),
         ..default()
     }, OnBattleScreen));
-
-
 
     commands.spawn((SpriteSheetBundle {
         transform: Transform {
@@ -135,8 +141,14 @@ fn battle_setup(
         debug!("Rolled initiative {:?} for {:?}", initiative, name);
         let character_initiative = Initiative::new(initiative);
         commands.entity(entity).insert(character_initiative);
-
+    }
+    for (entity, name, _skills) in characters.iter() {
+        debug!("Adding player character to {:?}::{:?} map", entity, name);
         commands.entity(entity).insert(InZone::new("cell_a_13"));
+    }
+    for (entity, name) in director_characters.iter() {
+        debug!("Adding director character to {:?}::{:?} map", entity, name);
+        commands.entity(entity).insert(InZone::new("central"));
     }
 
     game_state.set(GameState::BattleTurns);
@@ -146,9 +158,9 @@ fn add_zone(commands: &mut Commands, x_pos: f32, y_pos: f32, height: f32, width:
     commands.spawn(Zone {
         position: ZoneArea {
             center: Vec3::new(x_pos, y_pos, 1.),
-            size: Vec2::new(width, height)
+            size: Vec2::new(width, height),
         },
-        name: ZoneName::new(tag, zone_name)
+        name: ZoneName::new(tag, zone_name),
     });
 }
 
@@ -193,6 +205,20 @@ fn render_zones(
             transform: Transform::from_translation(area.center.clone()),
             ..default()
         }, OnBattleScreen));
+    }
+}
+
+fn resolve_zones(
+    mut located_objects: Query<(Entity, &mut InZone)>,
+    zones: Query<(Entity, &ZoneArea, &ZoneName)>,
+) {
+    for (entity, mut zone) in located_objects.iter_mut() {
+        for (zone_entity, area, name) in zones.iter() {
+            if zone.name == name.tag {
+                debug!("placing {:?}::{:?} in {:?}::{:?}::{:?}", entity, zone, zone_entity, area, name);
+                zone.area = Some(zone_entity);
+            }
+        }
     }
 }
 
