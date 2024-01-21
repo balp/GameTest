@@ -8,6 +8,8 @@ pub enum GameState {
     AssetsSetup,
     AssetsFailed,
     InteractiveFiction,
+    Battle,
+    BattleTurns,
+    BattleEnded,
     TheEnd,
-    // Battle,
 }

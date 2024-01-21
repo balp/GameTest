@@ -7,7 +7,10 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.12.1", features = ["dynamic_linking"] }
-bevy_talks = "0.4.0"
+# Use bevy_talks with extra features for now:
+# * have skill check on choise.
+bevy_talks = { version = "0.4.0" }
+rand = "0.8.5"
 
 [workspace]
 resolver = "2"
@@ -18,4 +21,5 @@ opt-level = 1
 opt-level = 3
 
 [patch.crates-io]
+# bevy_talks = { git = "https://github.com/balp/bevy_talks.git" }
 bevy_talks = { path = "../bevy_talks" }

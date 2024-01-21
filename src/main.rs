@@ -10,6 +10,7 @@ mod end_scene;
 mod interactive_fiction;
 mod states;
 mod utils;
+mod battle;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
@@ -28,10 +29,17 @@ fn main() {
             asset_loader::AssetLoader,
             interactive_fiction::InteractiveFiction,
             end_scene::TheEnd,
+            battle::Battle,
         ))
         .run();
 }
 
+#[derive(Component)]
+struct MainCamera;
+
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn((Camera2dBundle {
+        transform: Transform::from_xyz(1024.0, 0.0, 0.0),
+        ..default()
+    }, MainCamera));
 }
