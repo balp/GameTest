@@ -12,6 +12,17 @@ impl Default for PortraitAtlasId {
 }
 
 #[derive(Component, Debug)]
+pub struct IconName {
+    pub slug: String,
+}
+
+impl IconName {
+    pub fn new(slug: &str) -> Self {
+        Self { slug: slug.to_string(), }
+    }
+}
+
+#[derive(Component, Debug)]
 pub(crate) struct CharacterName {
     pub(crate) slug: String,
     pub(crate) alias: String,
@@ -86,6 +97,7 @@ impl Initiative {
 #[derive(Bundle, Debug)]
 pub struct PlayerCharacter {
     pub name: CharacterName,
+    pub icon: IconName,
     pub portrait: PortraitAtlasId,
     pub skills: CharacterSkills,
     pub vitality: Vitality,
@@ -117,6 +129,7 @@ impl NoName {
 #[derive(Bundle, Debug)]
 pub struct DirectorCharacter {
     pub name: NoName,
+    pub icon: IconName,
     pub portrait: PortraitAtlasId,
     pub initiative: Initiative,
     pub vitality: Vitality,

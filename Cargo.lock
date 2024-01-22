@@ -960,6 +960,7 @@ dependencies = [
 [[package]]
 name = "bevy_talks"
 version = "0.4.0"
+source = "git+https://github.com/balp/bevy_talks.git#c3109549b3841a3d59c69513781c4386167342b0"
 dependencies = [
  "aery",
  "bevy",

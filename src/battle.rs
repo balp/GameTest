@@ -1,4 +1,7 @@
+use std::vec::Vec;
+
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 use bevy::window::PrimaryWindow;
 use rand::Rng;
 
@@ -25,11 +28,14 @@ impl Plugin for Battle {
                 Update,
                 (
                     show_initiative,
+                    draw_icons_in_zone,
                     my_cursor_system,
                     bevy::window::close_on_esc,
                 ).run_if(in_state(GameState::BattleTurns)),
             )
-            .add_systems(Update, (bevy::window::close_on_esc).run_if(in_state(GameState::BattleEnded)))
+            .add_systems(Update, (
+                draw_icons_in_zone,
+                bevy::window::close_on_esc).run_if(in_state(GameState::BattleEnded)))
             .add_systems(
                 OnExit(GameState::BattleEnded),
                 despawn_screen::<OnBattleScreen>,
@@ -90,8 +96,8 @@ fn battle_setup(
     mut commands: Commands,
     battle_asset: Res<BattleAsset>,
     mut windows: Query<&mut Window>,
-    mut characters: Query<(Entity, &CharacterName, &CharacterSkills)>,
-    mut director_characters: Query<(Entity, &NoName)>,
+    mut characters: Query<(Entity, &CharacterName, &CharacterSkills, &PortraitAtlasId)>,
+    mut director_characters: Query<(Entity, &NoName, &PortraitAtlasId)>,
     mut game_state: ResMut<NextState<GameState>>,
 ) {
     info!("battle_setup...");
@@ -128,7 +134,7 @@ fn battle_setup(
     add_zone(&mut commands, 990., 0., 640., 580., "central", "Central");
     add_zone(&mut commands, 1530., 0., 90., 470., "access_corridor", "Access Corridor");
 
-    for (entity, name, skills) in characters.iter() {
+    for (entity, name, skills, _portait_id) in characters.iter() {
         let mut rng = rand::thread_rng();
         let roll = rng.gen_range(1..=100);
         let tens = roll / 10u8;
@@ -142,13 +148,47 @@ fn battle_setup(
         let character_initiative = Initiative::new(initiative);
         commands.entity(entity).insert(character_initiative);
     }
-    for (entity, name, _skills) in characters.iter() {
+    for (entity, name, _skills, _portait_id) in characters.iter() {
         debug!("Adding player character to {:?}::{:?} map", entity, name);
         commands.entity(entity).insert(InZone::new("cell_a_13"));
     }
-    for (entity, name) in director_characters.iter() {
+    let mut x_pos = 100.;
+    for (entity, name, _skills, portait_id) in characters.iter() {
+        debug!("Setup character portrait {:?}::{:?} map", name, portait_id);
+        commands.entity(entity).insert((
+            SpriteSheetBundle {
+                transform: Transform {
+                    translation: Vec3::new(x_pos, -400., 3.),
+                    ..default()
+                },
+                sprite: TextureAtlasSprite::new(portait_id.index),
+                texture_atlas: battle_asset.portrait_atlas.clone(),
+                ..default()
+            },
+            OnBattleScreen)
+        );
+        x_pos += 100.;
+    }
+
+    for (entity, name, _portait_id) in director_characters.iter() {
         debug!("Adding director character to {:?}::{:?} map", entity, name);
         commands.entity(entity).insert(InZone::new("central"));
+    }
+    for (entity, _name, portait_id) in director_characters.iter() {
+        debug!("Adding director character portrait {:?}::{:?} map", entity, portait_id);
+        commands.entity(entity).insert((
+            SpriteSheetBundle {
+                transform: Transform {
+                    translation: Vec3::new(x_pos, -400., 3.),
+                    ..default()
+                },
+                sprite: TextureAtlasSprite::new(portait_id.index),
+                texture_atlas: battle_asset.portrait_atlas.clone(),
+                ..default()
+            },
+            OnBattleScreen)
+        );
+        x_pos += 100.;
     }
 
     game_state.set(GameState::BattleTurns);
@@ -183,10 +223,10 @@ fn my_cursor_system(
 
 fn show_initiative(
     mut query: Query<&mut TextureAtlasSprite, With<InitiativeSprite>>,
-    characters: Query<(&CharacterName, &PortraitAtlasId), With<CurrentInitiative>>,
+    characters: Query<&PortraitAtlasId, With<CurrentInitiative>>,
 ) {
     let Ok(mut sprite_handle) = query.get_single_mut() else { return; };
-    let Ok((current_player, current_portrait)) = characters.get_single() else { return; };
+    let Ok(current_portrait) = characters.get_single() else { return; };
     sprite_handle.index = current_portrait.index;
 }
 
@@ -237,5 +277,29 @@ fn set_starting_initiative(
     }
     if let Some(entity) = start_player {
         commands.entity(entity).insert(CurrentInitiative);
+    }
+}
+
+fn draw_icons_in_zone(
+    mut characters: Query<(Entity, &mut Transform, &InZone)>,
+    zones: Query<(&ZoneArea)>,
+) {
+    let mut char_in_zone: HashMap<u32, Vec<Entity>> = HashMap::new();
+    for (entity, mut transform, in_zone) in characters.iter_mut() {
+        if let Some(in_area) = in_zone.area {
+            if let Ok(area) = zones.get_component::<ZoneArea>(in_area) {
+                let hash_key = in_area.index();
+                char_in_zone.entry(hash_key)
+                    .or_insert_with(Vec::new)
+                    .push(entity);
+                let people_in_zone = char_in_zone[&hash_key].len() as f32;
+                let off_set = -60. + people_in_zone * 20.;
+                transform.translation = Vec3::new(
+                    area.center.x + off_set,
+                    area.center.y,
+                    area.center.z + people_in_zone,
+                );
+            }
+        }
     }
 }

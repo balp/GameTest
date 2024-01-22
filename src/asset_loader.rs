@@ -1,7 +1,7 @@
 use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
 use bevy_talks::prelude::*;
 
-use crate::characters::{CharacterName, CharacterSkills, DirectorCharacter, Initiative, NoName, PlayerCharacter, PortraitAtlasId, SceneActor, Vitality};
+use crate::characters::{CharacterName, CharacterSkills, DirectorCharacter, IconName, Initiative, NoName, PlayerCharacter, PortraitAtlasId, SceneActor, Vitality};
 use crate::states::GameState;
 
 #[derive(Resource)]
@@ -96,36 +96,42 @@ fn show_splash_screen(
 fn add_characters(mut commands: Commands) {
     commands.spawn(PlayerCharacter {
         name: CharacterName::new("elektra", "Electra", "Elektra", "Ambrosia"),
+        icon: IconName::new("elektra"),
         portrait: PortraitAtlasId::default(),
         skills: CharacterSkills::new(15, 65, 15),
         vitality: Vitality::new(5),
     });
     commands.spawn(PlayerCharacter {
         name: CharacterName::new("yurika", "Yurika", "Yurika", "Mishida"),
+        icon: IconName::new("yurika"),
         portrait: PortraitAtlasId::default(),
         skills: CharacterSkills::new(15, 65, 15),
         vitality: Vitality::new(5),
     });
     commands.spawn(PlayerCharacter {
         name: CharacterName::new("paul", "Paul", "Paul", "Marchand"),
+        icon: IconName::new("paul"),
         portrait: PortraitAtlasId::default(),
         skills: CharacterSkills::new(65, 45, 65),
         vitality: Vitality::new(6),
     });
     commands.spawn(PlayerCharacter {
         name: CharacterName::new("harry", "Harry", "Harold", "Fitzroy"),
+        icon: IconName::new("harry"),
         portrait: PortraitAtlasId::default(),
         skills: CharacterSkills::new(65, 45, 15),
         vitality: Vitality::new(6),
     });
     commands.spawn(PlayerCharacter {
         name: CharacterName::new("frida", "Frida", "Anni-Frid", "Bäckströn"),
+        icon: IconName::new("frida"),
         portrait: PortraitAtlasId::default(),
         skills: CharacterSkills::new(45, 65, 15),
         vitality: Vitality::new(6),
     });
     commands.spawn(PlayerCharacter {
         name: CharacterName::new("eloise", "Éloïse", "Éloïse", "Giraud"),
+        icon: IconName::new("eloise"),
         portrait: PortraitAtlasId::default(),
         skills: CharacterSkills::new(15, 15, 15),
         vitality: Vitality::new(5),
@@ -141,12 +147,14 @@ fn add_characters(mut commands: Commands) {
     });
     commands.spawn(DirectorCharacter {
         name: NoName::new("guard_1", "Guard 1", "octopus_guard"),
+        icon: IconName::new("guard"),
         portrait: PortraitAtlasId::default(),
         initiative: Initiative::new(2),
         vitality: Vitality::new(2),
     });
     commands.spawn(DirectorCharacter {
         name: NoName::new("guard_2", "Guard 2", "octopus_guard"),
+        icon: IconName::new("guard"),
         portrait: PortraitAtlasId::default(),
         initiative: Initiative::new(2),
         vitality: Vitality::new(2),
@@ -155,7 +163,7 @@ fn add_characters(mut commands: Commands) {
 
 fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(PortraitIconsFolder(
-        asset_server.load_folder("portraits/dialog"),
+        asset_server.load_folder("portraits"),
     ));
     commands.insert_resource(MapsFolder(
         asset_server.load_folder("maps"),
@@ -195,7 +203,7 @@ fn setup_assets(
     preloaded_assets: Res<PreloadAssets>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut textures: ResMut<Assets<Image>>,
-    mut characters: Query<(&CharacterName, &mut PortraitAtlasId)>,
+    mut characters: Query<(&IconName, &mut PortraitAtlasId)>,
 ) {
     let mut portrait_texture_atlas_builder = TextureAtlasBuilder::default();
     let loaded_portrait_folder = loaded_folders.get(&portrait_icons_folder.0).unwrap();
@@ -223,6 +231,8 @@ fn setup_assets(
         }
         portrait_texture_atlas_builder.add_texture(id, texture);
     }
+
+
     let portrait_texture_atlas = portrait_texture_atlas_builder.finish(&mut textures).unwrap();
     let portrait_atlas = texture_atlases.add(portrait_texture_atlas);
 
