@@ -31,9 +31,7 @@ impl Plugin for Battle {
             )
             .add_systems(
                 Update,
-                (my_cursor_system,
-                 button_interaction_system,
-                )
+                (my_cursor_system, button_interaction_system)
                     .run_if(in_state(GameState::BattleTurns))
                     .in_set(BattleUpdateSets::UserInput),
             )
@@ -115,10 +113,10 @@ pub struct ZoneArea {
 
 impl ZoneArea {
     fn in_bounds(&self, pos: Vec2) -> bool {
-        let x_min = self.center.x - self.size.x/2.;
-        let x_max = self.center.x + self.size.x/2.;
-        let y_min = self.center.y - self.size.y/2.;
-        let y_max = self.center.y + self.size.y/2.;
+        let x_min = self.center.x - self.size.x / 2.;
+        let x_max = self.center.x + self.size.x / 2.;
+        let y_min = self.center.y - self.size.y / 2.;
+        let y_max = self.center.y + self.size.y / 2.;
 
         pos.x >= x_min && pos.y >= y_min && pos.x <= x_max && pos.y <= y_max
     }
@@ -326,7 +324,13 @@ fn battle_setup(
     game_state.set(GameState::BattleTurns);
 }
 
-fn add_battle_token(commands: &mut Commands, battle_asset: &Res<BattleAsset>, x_pos: f32, entity: Entity, portait_id: &PortraitAtlasId) {
+fn add_battle_token(
+    commands: &mut Commands,
+    battle_asset: &Res<BattleAsset>,
+    x_pos: f32,
+    entity: Entity,
+    portait_id: &PortraitAtlasId,
+) {
     commands.entity(entity).insert((
         SpriteSheetBundle {
             transform: Transform {
@@ -421,7 +425,6 @@ fn button_interaction_system(
         }
     }
 }
-
 
 fn show_button_state(
     mut pressed_buttons: Query<
@@ -561,13 +564,15 @@ fn add_zone(
     tag: &str,
     zone_name: &str,
 ) {
-    commands.spawn((Zone {
-        position: ZoneArea {
-            center: Vec3::new(x_pos, y_pos, 1.),
-            size: Vec2::new(width, height),
-        },
-        name: ZoneName::new(tag, zone_name),
-    }));
+    commands.spawn(
+        (Zone {
+            position: ZoneArea {
+                center: Vec3::new(x_pos, y_pos, 1.),
+                size: Vec2::new(width, height),
+            },
+            name: ZoneName::new(tag, zone_name),
+        }),
+    );
 }
 
 fn my_cursor_system(
@@ -618,10 +623,7 @@ fn show_initiative(
     sprite_handle.index = current_portrait.index;
 }
 
-fn setup_zone_sprites(
-    mut commands: Commands,
-    zones: Query<(Entity, &ZoneArea, &ZoneName)>
-) {
+fn setup_zone_sprites(mut commands: Commands, zones: Query<(Entity, &ZoneArea, &ZoneName)>) {
     for (entity, area, name) in zones.iter() {
         debug!("render zone: {:?} {:?}", name, area);
         commands.entity(entity).insert((
@@ -642,7 +644,7 @@ fn setup_zone_sprites(
 fn render_zones(
     mut hoover_zones: Query<&mut Sprite, (With<ZoneArea>, With<HooverZone>)>,
     mut other_zones: Query<&mut Sprite, (With<ZoneArea>, Without<HooverZone>)>,
-){
+) {
     for mut sprite in hoover_zones.iter_mut() {
         sprite.color = Color::rgba(0.941, 0., 1., 0.5);
     }
