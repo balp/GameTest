@@ -245,7 +245,7 @@ fn setup_assets(
 
     let mut maps = Vec::new();
     let loaded_map_folder = loaded_folders.get(&maps_folder.0).unwrap();
-    for (handle) in loaded_map_folder.handles.iter() {
+    for handle in loaded_map_folder.handles.iter() {
         let texture_handle = handle.clone();
         let typed_handle = texture_handle.typed_unchecked::<Image>();
         debug!("Adding image: {:?}", handle.path().unwrap());

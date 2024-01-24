@@ -145,7 +145,7 @@ fn interact(
                 if input.just_pressed(selection_keys[n]) {
                     debug!("just pressed choice {n} -> {:?}", &talk.current_choices[n]);
                     if let Some(check) = &talk.current_choices[n].check {
-                        for (entity, character, skills) in actors.iter() {
+                        for (_entity, character, skills) in actors.iter() {
                             debug!("check({:?}, {:?}, {:?})", check, character, skills);
                             let mut rng = rand::thread_rng();
                             let result = match check.as_str() {
@@ -187,7 +187,7 @@ fn update_text(
     talks: Query<Entity, With<Talk>>,
     mut game_state: ResMut<NextState<GameState>>,
     talk_comps: Query<Ref<Talk>>,
-    characters: Query<(&CharacterName)>,
+    characters: Query<&CharacterName>,
 ) {
     for talk in &talk_comps {
         if !talk.is_changed() || talk.is_added() {

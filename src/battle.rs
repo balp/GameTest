@@ -143,8 +143,8 @@ fn battle_setup(
     mut commands: Commands,
     battle_asset: Res<BattleAsset>,
     mut windows: Query<&mut Window>,
-    mut characters: Query<(Entity, &CharacterName, &CharacterSkills, &PortraitAtlasId)>,
-    mut director_characters: Query<(Entity, &NoName, &PortraitAtlasId)>,
+    characters: Query<(Entity, &CharacterName, &CharacterSkills, &PortraitAtlasId)>,
+    director_characters: Query<(Entity, &NoName, &PortraitAtlasId)>,
     mut game_state: ResMut<NextState<GameState>>,
 ) {
     info!("battle_setup...");
@@ -285,18 +285,7 @@ fn battle_setup(
     let mut x_pos = 100.;
     for (entity, name, _skills, portait_id) in characters.iter() {
         debug!("Setup character portrait {:?}::{:?} map", name, portait_id);
-        commands.entity(entity).insert((
-            SpriteSheetBundle {
-                transform: Transform {
-                    translation: Vec3::new(x_pos, -400., 3.),
-                    ..default()
-                },
-                sprite: TextureAtlasSprite::new(portait_id.index),
-                texture_atlas: battle_asset.portrait_atlas.clone(),
-                ..default()
-            },
-            OnBattleScreen,
-        ));
+        add_battle_token(&mut commands, &battle_asset, x_pos, entity, portait_id);
         x_pos += 100.;
     }
 
@@ -309,22 +298,26 @@ fn battle_setup(
             "Adding director character portrait {:?}::{:?} map",
             entity, portait_id
         );
-        commands.entity(entity).insert((
-            SpriteSheetBundle {
-                transform: Transform {
-                    translation: Vec3::new(x_pos, -400., 3.),
-                    ..default()
-                },
-                sprite: TextureAtlasSprite::new(portait_id.index),
-                texture_atlas: battle_asset.portrait_atlas.clone(),
-                ..default()
-            },
-            OnBattleScreen,
-        ));
+        add_battle_token(&mut commands, &battle_asset, x_pos, entity, portait_id);
         x_pos += 100.;
     }
 
     game_state.set(GameState::BattleTurns);
+}
+
+fn add_battle_token(commands: &mut Commands, battle_asset: &Res<BattleAsset>, x_pos: f32, entity: Entity, portait_id: &PortraitAtlasId) {
+    commands.entity(entity).insert((
+        SpriteSheetBundle {
+            transform: Transform {
+                translation: Vec3::new(x_pos, -400., 3.),
+                ..default()
+            },
+            sprite: TextureAtlasSprite::new(portait_id.index),
+            texture_atlas: battle_asset.portrait_atlas.clone(),
+            ..default()
+        },
+        OnBattleScreen,
+    ));
 }
 
 fn enable_buttons(
@@ -379,7 +372,7 @@ const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
 fn button_system(
     mut commands: Commands,
-    mut pressed_query: Query<(Entity), (With<ButtonEnabled>, With<ButtonPressed>)>,
+    pressed_query: Query<Entity, (With<ButtonEnabled>, With<ButtonPressed>)>,
     mut interaction_query: Query<
         (Entity, &Interaction),
         (
@@ -397,7 +390,7 @@ fn button_system(
                 }
             }
             Interaction::Hovered => {
-                if !(pressed_query.contains(entity)) {
+                if !pressed_query.contains(entity) {
                     commands.entity(entity).insert(ButtonHoover);
                 }
             }
@@ -590,7 +583,7 @@ fn show_initiative(
     sprite_handle.index = current_portrait.index;
 }
 
-fn render_zones(mut commands: Commands, mut zones: Query<(&ZoneArea, &ZoneName)>) {
+fn render_zones(mut commands: Commands, zones: Query<(&ZoneArea, &ZoneName)>) {
     for (area, name) in zones.iter() {
         debug!("render zone: {:?} {:?}", name, area);
         commands.spawn((
@@ -625,7 +618,7 @@ fn resolve_zones(
     }
 }
 
-fn set_starting_initiative(mut commands: Commands, mut characters: Query<(Entity, &Initiative)>) {
+fn set_starting_initiative(mut commands: Commands, characters: Query<(Entity, &Initiative)>) {
     let mut start_player: Option<Entity> = None;
     let mut highest_initiative = 0;
     for (entity, initiative) in characters.iter() {
@@ -642,7 +635,7 @@ fn set_starting_initiative(mut commands: Commands, mut characters: Query<(Entity
 
 fn draw_icons_in_zone(
     mut characters: Query<(Entity, &mut Transform, &InZone)>,
-    zones: Query<(&ZoneArea)>,
+    zones: Query<&ZoneArea>,
 ) {
     let mut char_in_zone: HashMap<u32, Vec<Entity>> = HashMap::new();
     for (entity, mut transform, in_zone) in characters.iter_mut() {
