@@ -20,7 +20,7 @@ impl Plugin for Battle {
             .add_systems(OnEnter(GameState::Battle), battle_setup)
             .add_systems(
                 OnExit(GameState::Battle),
-                (set_starting_initiative, render_zones, resolve_zones),
+                (set_starting_initiative, setup_zone_sprites, resolve_zones),
             )
             .add_systems(OnEnter(GameState::BattleTurns), action_menu)
             .add_systems(
@@ -31,7 +31,9 @@ impl Plugin for Battle {
             )
             .add_systems(
                 Update,
-                (my_cursor_system, button_system)
+                (my_cursor_system,
+                 button_interaction_system,
+                )
                     .run_if(in_state(GameState::BattleTurns))
                     .in_set(BattleUpdateSets::UserInput),
             )
@@ -41,6 +43,7 @@ impl Plugin for Battle {
                     show_initiative,
                     show_button_state,
                     draw_icons_in_zone,
+                    render_zones,
                     bevy::window::close_on_esc,
                 )
                     .run_if(in_state(GameState::BattleTurns))
@@ -94,6 +97,13 @@ struct ButtonHoover;
 #[derive(Component)]
 struct ButtonEnabled;
 
+#[derive(Component)]
+struct CharacterZone;
+#[derive(Component)]
+struct AdjacentZone;
+#[derive(Component)]
+struct HooverZone;
+
 #[derive(Resource, Default, Debug)]
 struct MyWorldCoords(Vec2);
 
@@ -101,6 +111,17 @@ struct MyWorldCoords(Vec2);
 pub struct ZoneArea {
     center: Vec3,
     size: Vec2,
+}
+
+impl ZoneArea {
+    fn in_bounds(&self, pos: Vec2) -> bool {
+        let x_min = self.center.x - self.size.x/2.;
+        let x_max = self.center.x + self.size.x/2.;
+        let y_min = self.center.y - self.size.y/2.;
+        let y_max = self.center.y + self.size.y/2.;
+
+        pos.x >= x_min && pos.y >= y_min && pos.x <= x_max && pos.y <= y_max
+    }
 }
 
 #[derive(Component, Debug)]
@@ -370,7 +391,7 @@ const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
-fn button_system(
+fn button_interaction_system(
     mut commands: Commands,
     pressed_query: Query<Entity, (With<ButtonEnabled>, With<ButtonPressed>)>,
     mut interaction_query: Query<
@@ -400,6 +421,7 @@ fn button_system(
         }
     }
 }
+
 
 fn show_button_state(
     mut pressed_buttons: Query<
@@ -539,19 +561,22 @@ fn add_zone(
     tag: &str,
     zone_name: &str,
 ) {
-    commands.spawn(Zone {
+    commands.spawn((Zone {
         position: ZoneArea {
             center: Vec3::new(x_pos, y_pos, 1.),
             size: Vec2::new(width, height),
         },
         name: ZoneName::new(tag, zone_name),
-    });
+    }));
 }
 
 fn my_cursor_system(
+    mut commands: Commands,
     mut mycoords: ResMut<MyWorldCoords>,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    buttons: Res<Input<MouseButton>>,
+    zones: Query<(Entity, &ZoneArea)>,
 ) {
     let Ok((camera, camera_transform)) = q_camera.get_single() else {
         return;
@@ -567,6 +592,16 @@ fn my_cursor_system(
     {
         mycoords.0 = world_position;
         // debug!("World coords: {}/{}", world_position.x, world_position.y);
+        if buttons.just_pressed(MouseButton::Left) {
+            debug!("Button just pressed@ {:?}", mycoords);
+        }
+        for (entity, zone) in zones.iter() {
+            if zone.in_bounds(mycoords.0) {
+                commands.entity(entity).insert(HooverZone);
+            } else {
+                commands.entity(entity).remove::<HooverZone>();
+            }
+        }
     }
 }
 
@@ -583,10 +618,13 @@ fn show_initiative(
     sprite_handle.index = current_portrait.index;
 }
 
-fn render_zones(mut commands: Commands, zones: Query<(&ZoneArea, &ZoneName)>) {
-    for (area, name) in zones.iter() {
+fn setup_zone_sprites(
+    mut commands: Commands,
+    zones: Query<(Entity, &ZoneArea, &ZoneName)>
+) {
+    for (entity, area, name) in zones.iter() {
         debug!("render zone: {:?} {:?}", name, area);
-        commands.spawn((
+        commands.entity(entity).insert((
             SpriteBundle {
                 sprite: Sprite {
                     color: Color::rgba(0.941, 0.0, 1.0, 0.5),
@@ -598,6 +636,18 @@ fn render_zones(mut commands: Commands, zones: Query<(&ZoneArea, &ZoneName)>) {
             },
             OnBattleScreen,
         ));
+    }
+}
+
+fn render_zones(
+    mut hoover_zones: Query<&mut Sprite, (With<ZoneArea>, With<HooverZone>)>,
+    mut other_zones: Query<&mut Sprite, (With<ZoneArea>, Without<HooverZone>)>,
+){
+    for mut sprite in hoover_zones.iter_mut() {
+        sprite.color = Color::rgba(0.941, 0., 1., 0.5);
+    }
+    for mut sprite in other_zones.iter_mut() {
+        sprite.color = Color::rgba(0., 0., 1., 0.);
     }
 }
 
