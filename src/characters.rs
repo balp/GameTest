@@ -18,7 +18,9 @@ pub struct IconName {
 
 impl IconName {
     pub fn new(slug: &str) -> Self {
-        Self { slug: slug.to_string(), }
+        Self {
+            slug: slug.to_string(),
+        }
     }
 }
 
@@ -67,7 +69,11 @@ pub(crate) struct CharacterSkills {
 
 impl CharacterSkills {
     pub fn new(agility: u8, alertness: u8, sneak: u8) -> Self {
-        Self { agility: Skill::new(agility), alertness: Skill::new(alertness), sneak: Skill::new(sneak) }
+        Self {
+            agility: Skill::new(agility),
+            alertness: Skill::new(alertness),
+            sneak: Skill::new(sneak),
+        }
     }
 }
 
@@ -92,7 +98,6 @@ impl Initiative {
         Self { value }
     }
 }
-
 
 #[derive(Bundle, Debug)]
 pub struct PlayerCharacter {

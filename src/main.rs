@@ -5,12 +5,13 @@ use bevy::prelude::*;
 use bevy_talks::prelude::*;
 
 mod asset_loader;
+mod battle;
 mod characters;
 mod end_scene;
 mod interactive_fiction;
+mod schedule;
 mod states;
 mod utils;
-mod battle;
 
 const TEXT_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
@@ -38,8 +39,11 @@ fn main() {
 struct MainCamera;
 
 fn setup(mut commands: Commands) {
-    commands.spawn((Camera2dBundle {
-        transform: Transform::from_xyz(1024.0, 0.0, 0.0),
-        ..default()
-    }, MainCamera));
+    commands.spawn((
+        Camera2dBundle {
+            transform: Transform::from_xyz(1024.0, 0.0, 0.0),
+            ..default()
+        },
+        MainCamera,
+    ));
 }

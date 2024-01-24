@@ -1,11 +1,11 @@
+use crate::asset_loader::DialogTalkAsset;
+use crate::characters::{CharacterName, CharacterSkills, PortraitAtlasId};
+use crate::states::GameState;
+use crate::utils::despawn_screen;
+use crate::TEXT_COLOR;
 use bevy::prelude::*;
 use bevy_talks::prelude::*;
 use rand::Rng;
-use crate::asset_loader::DialogTalkAsset;
-use crate::characters::{CharacterName, PortraitAtlasId, CharacterSkills};
-use crate::states::GameState;
-use crate::TEXT_COLOR;
-use crate::utils::despawn_screen;
 
 pub struct InteractiveFiction;
 
@@ -94,10 +94,10 @@ fn fiction_setup(
                                 ..default()
                             },
                         )
-                            .with_style(Style {
-                                margin: UiRect::all(Val::Px(50.0)),
-                                ..default()
-                            }),
+                        .with_style(Style {
+                            margin: UiRect::all(Val::Px(50.0)),
+                            ..default()
+                        }),
                         FictionText,
                     ));
                     parent.spawn((
@@ -126,9 +126,18 @@ fn interact(
     actors: Query<(Entity, &CharacterName, &CharacterSkills), With<InScene>>,
 ) {
     if let Ok((talk_ent, talk)) = talks.get_single() {
-        let selection_keys = vec![KeyCode::Key1, KeyCode::Key2, KeyCode::Key3, KeyCode::Key4,
-                                  KeyCode::Key5, KeyCode::Key6, KeyCode::Key7, KeyCode::Key8, KeyCode::Key9,
-                                  KeyCode::Key0];
+        let selection_keys = vec![
+            KeyCode::Key1,
+            KeyCode::Key2,
+            KeyCode::Key3,
+            KeyCode::Key4,
+            KeyCode::Key5,
+            KeyCode::Key6,
+            KeyCode::Key7,
+            KeyCode::Key8,
+            KeyCode::Key9,
+            KeyCode::Key0,
+        ];
         if talk.current_kind == NodeKind::Choice {
             // debug!("select:: {:?}", talk.current_choices);
             let no_choices = talk.current_choices.len();
@@ -140,9 +149,9 @@ fn interact(
                             debug!("check({:?}, {:?}, {:?})", check, character, skills);
                             let mut rng = rand::thread_rng();
                             let result = match check.as_str() {
-                                "agility" => { rng.gen_range(1..=100) < skills.agility.value }
-                                "sneak" => { rng.gen_range(1..=100) < skills.sneak.value }
-                                &_ => {false}
+                                "agility" => rng.gen_range(1..=100) < skills.agility.value,
+                                "sneak" => rng.gen_range(1..=100) < skills.sneak.value,
+                                &_ => false,
                             };
                             if result {
                                 debug!("Skill check passed, go next");
@@ -168,7 +177,8 @@ fn interact(
         } else if input.just_pressed(KeyCode::Space) {
             next_action_events.send(NextActionRequest(talk_ent));
         }
-    } else {}
+    } else {
+    }
 }
 
 fn update_text(
@@ -246,7 +256,7 @@ fn update_text(
     }
 }
 
-fn update_actors_in_scene (
+fn update_actors_in_scene(
     mut commands: Commands,
     characters: Query<(Entity, &CharacterName)>,
     talk_comps: Query<Ref<Talk>>,
@@ -267,7 +277,6 @@ fn update_actors_in_scene (
                         commands.entity(entity).insert(InScene);
                     }
                 }
-
             }
             NodeKind::Leave => {
                 for (entity, character) in characters.iter() {
@@ -294,7 +303,8 @@ fn update_speaker_logo(
 
         let current_actor = if talk.current_kind == NodeKind::Join
             || talk.current_kind == NodeKind::Start
-            || talk.current_kind == NodeKind::Leave {
+            || talk.current_kind == NodeKind::Leave
+        {
             "empty"
         } else if talk.current_actors.is_empty() {
             "narrator"

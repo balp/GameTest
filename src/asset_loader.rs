@@ -1,7 +1,10 @@
 use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
 use bevy_talks::prelude::*;
 
-use crate::characters::{CharacterName, CharacterSkills, DirectorCharacter, IconName, Initiative, NoName, PlayerCharacter, PortraitAtlasId, SceneActor, Vitality};
+use crate::characters::{
+    CharacterName, CharacterSkills, DirectorCharacter, IconName, Initiative, NoName,
+    PlayerCharacter, PortraitAtlasId, SceneActor, Vitality,
+};
 use crate::states::GameState;
 
 #[derive(Resource)]
@@ -162,12 +165,8 @@ fn add_characters(mut commands: Commands) {
 }
 
 fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.insert_resource(PortraitIconsFolder(
-        asset_server.load_folder("portraits"),
-    ));
-    commands.insert_resource(MapsFolder(
-        asset_server.load_folder("maps"),
-    ));
+    commands.insert_resource(PortraitIconsFolder(asset_server.load_folder("portraits")));
+    commands.insert_resource(MapsFolder(asset_server.load_folder("maps")));
     let intro_talk = asset_server.load(DIALOG_FILE);
     commands.insert_resource(PreloadAssets {
         intro_dialog: intro_talk,
@@ -232,8 +231,9 @@ fn setup_assets(
         portrait_texture_atlas_builder.add_texture(id, texture);
     }
 
-
-    let portrait_texture_atlas = portrait_texture_atlas_builder.finish(&mut textures).unwrap();
+    let portrait_texture_atlas = portrait_texture_atlas_builder
+        .finish(&mut textures)
+        .unwrap();
     let portrait_atlas = texture_atlases.add(portrait_texture_atlas);
 
     let talk_asset = DialogTalkAsset {
@@ -252,7 +252,10 @@ fn setup_assets(
         maps.push(typed_handle);
     }
 
-    let battle_asset = BattleAsset { portrait_atlas, maps };
+    let battle_asset = BattleAsset {
+        portrait_atlas,
+        maps,
+    };
     commands.insert_resource(battle_asset);
 }
 
