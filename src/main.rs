@@ -2,13 +2,11 @@
 
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
-use bevy_talks::prelude::*;
 
 mod asset_loader;
 mod battle;
 mod characters;
 mod end_scene;
-mod interactive_fiction;
 mod schedule;
 mod states;
 mod utils;
@@ -21,14 +19,13 @@ fn main() {
             DefaultPlugins.set(LogPlugin {
                 filter: "info,wgpu_core=warn,wgpu_hal=warn,game_test=debug".into(),
                 level: bevy::log::Level::DEBUG,
+                ..default()
             }),
-            TalksPlugin,
         ))
-        .add_state::<states::GameState>()
+        .init_state::<states::GameState>()
         .add_systems(Startup, setup)
         .add_plugins((
             asset_loader::AssetLoader,
-            interactive_fiction::InteractiveFiction,
             end_scene::TheEnd,
             battle::Battle,
         ))

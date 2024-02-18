@@ -1,5 +1,4 @@
 use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
-use bevy_talks::prelude::*;
 
 use crate::characters::{
     CharacterName, CharacterSkills, DirectorCharacter, IconName, Initiative, NoName,
@@ -9,21 +8,15 @@ use crate::states::GameState;
 
 #[derive(Resource)]
 pub struct PreloadAssets {
-    pub(crate) intro_dialog: Handle<TalkData>,
     pub(crate) fiction_font: Handle<Font>,
 }
 
-#[derive(Resource)]
-pub struct DialogTalkAsset {
-    pub(crate) intro_dialog: Handle<TalkData>,
-    pub(crate) portrait_atlas: Handle<TextureAtlas>,
-    pub(crate) fiction_font: Handle<Font>,
-}
 
 #[derive(Resource)]
 pub struct BattleAsset {
-    pub(crate) portrait_atlas: Handle<TextureAtlas>,
-    pub(crate) maps: Vec<Handle<Image>>,
+    pub portrait_atlas: Handle<TextureAtlasLayout>,
+    pub portrait_image: Handle<Image>,
+    pub maps: Vec<Handle<Image>>,
 }
 
 const DIALOG_FILE: &str = "dialog/the_cell.talk.ron";
@@ -167,9 +160,7 @@ fn add_characters(mut commands: Commands) {
 fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(PortraitIconsFolder(asset_server.load_folder("portraits")));
     commands.insert_resource(MapsFolder(asset_server.load_folder("maps")));
-    let intro_talk = asset_server.load(DIALOG_FILE);
     commands.insert_resource(PreloadAssets {
-        intro_dialog: intro_talk,
         fiction_font: asset_server.load("fonts/gnuolane-free.rg-regular.otf"),
     });
 }
@@ -183,8 +174,7 @@ fn check_assets_loaded(
     time: Res<Time>,
     mut timer: ResMut<SplashTimer>,
 ) {
-    if server.is_loaded_with_dependencies(preloaded_assets.intro_dialog.clone())
-        && server.is_loaded_with_dependencies(preloaded_assets.fiction_font.clone())
+    if server.is_loaded_with_dependencies(preloaded_assets.fiction_font.clone())
         && server.is_loaded_with_dependencies(&portrait_icons_folder.0)
         && server.is_loaded_with_dependencies(&maps_folder.0)
     {
@@ -200,7 +190,7 @@ fn setup_assets(
     portrait_icons_folder: Res<PortraitIconsFolder>,
     maps_folder: Res<MapsFolder>,
     preloaded_assets: Res<PreloadAssets>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut textures: ResMut<Assets<Image>>,
     mut characters: Query<(&IconName, &mut PortraitAtlasId)>,
 ) {
@@ -228,20 +218,14 @@ fn setup_assets(
                 }
             }
         }
-        portrait_texture_atlas_builder.add_texture(id, texture);
+        portrait_texture_atlas_builder.add_texture(Some(id), texture);
     }
 
-    let portrait_texture_atlas = portrait_texture_atlas_builder
-        .finish(&mut textures)
+    let (portrait_texture_atlas, portrait_raw_image) = portrait_texture_atlas_builder
+        .finish()
         .unwrap();
     let portrait_atlas = texture_atlases.add(portrait_texture_atlas);
-
-    let talk_asset = DialogTalkAsset {
-        intro_dialog: preloaded_assets.intro_dialog.clone(),
-        portrait_atlas: portrait_atlas.clone(),
-        fiction_font: preloaded_assets.fiction_font.clone(),
-    };
-    commands.insert_resource(talk_asset);
+    let portrait_image = textures.add(portrait_raw_image);
 
     let mut maps = Vec::new();
     let loaded_map_folder = loaded_folders.get(&maps_folder.0).unwrap();
@@ -254,6 +238,7 @@ fn setup_assets(
 
     let battle_asset = BattleAsset {
         portrait_atlas,
+        portrait_image,
         maps,
     };
     commands.insert_resource(battle_asset);

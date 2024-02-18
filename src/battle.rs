@@ -186,8 +186,11 @@ fn battle_setup(
                 translation: Vec3::new(1900.0, 400.0, 2.0),
                 ..default()
             },
-            sprite: TextureAtlasSprite::default(),
-            texture_atlas: battle_asset.portrait_atlas.clone(),
+            atlas: TextureAtlas {
+                layout: battle_asset.portrait_atlas.clone(),
+                index: 0
+            },
+            texture: battle_asset.portrait_image.clone(),
             ..default()
         },
         InitiativeSprite,
@@ -337,8 +340,11 @@ fn add_battle_token(
                 translation: Vec3::new(x_pos, -400., 3.),
                 ..default()
             },
-            sprite: TextureAtlasSprite::new(portait_id.index),
-            texture_atlas: battle_asset.portrait_atlas.clone(),
+            atlas: TextureAtlas {
+                layout: battle_asset.portrait_atlas.clone(),
+                index: portait_id.index,
+            },
+            texture: battle_asset.portrait_image.clone(),
             ..default()
         },
         OnBattleScreen,
@@ -565,13 +571,13 @@ fn add_zone(
     zone_name: &str,
 ) {
     commands.spawn(
-        (Zone {
+        Zone {
             position: ZoneArea {
                 center: Vec3::new(x_pos, y_pos, 1.),
                 size: Vec2::new(width, height),
             },
             name: ZoneName::new(tag, zone_name),
-        }),
+        },
     );
 }
 
@@ -580,7 +586,7 @@ fn my_cursor_system(
     mut mycoords: ResMut<MyWorldCoords>,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
-    buttons: Res<Input<MouseButton>>,
+    buttons: Res<ButtonInput<MouseButton>>,
     zones: Query<(Entity, &ZoneArea)>,
 ) {
     let Ok((camera, camera_transform)) = q_camera.get_single() else {
@@ -611,7 +617,7 @@ fn my_cursor_system(
 }
 
 fn show_initiative(
-    mut query: Query<&mut TextureAtlasSprite, With<InitiativeSprite>>,
+    mut query: Query<&mut TextureAtlas, With<InitiativeSprite>>,
     characters: Query<&PortraitAtlasId, With<CurrentInitiative>>,
 ) {
     let Ok(mut sprite_handle) = query.get_single_mut() else {
@@ -692,7 +698,7 @@ fn draw_icons_in_zone(
     let mut char_in_zone: HashMap<u32, Vec<Entity>> = HashMap::new();
     for (entity, mut transform, in_zone) in characters.iter_mut() {
         if let Some(in_area) = in_zone.area {
-            if let Ok(area) = zones.get_component::<ZoneArea>(in_area) {
+            if let Ok(area) = zones.get(in_area) {
                 let hash_key = in_area.index();
                 char_in_zone
                     .entry(hash_key)
