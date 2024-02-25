@@ -20,7 +20,7 @@ pub struct PreloadAssets {
 pub struct CombatAsset {
     pub portrait_atlas: Handle<TextureAtlasLayout>,
     pub portrait_image: Handle<Image>,
-    pub maps: Vec<Handle<Image>>,
+    pub maps: HashMap<String, Handle<Image>>,
     pub combat_map: Handle<CombatMap>,
     pub characters: Handle<SaveCharacters>,
 }
@@ -38,7 +38,7 @@ impl Plugin for AssetLoader {
             .add_systems(OnEnter(GameState::Splash), show_splash_screen)
             .add_systems(
                 OnEnter(GameState::AssetsLoading),
-                (add_characters, load_assets),
+                (load_assets),
             )
             .add_systems(
                 Update,
@@ -99,7 +99,6 @@ fn show_splash_screen(
     game_state.set(GameState::AssetsLoading);
 }
 
-fn add_characters(mut commands: Commands) {}
 
 fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(PortraitIconsFolder(asset_server.load_folder("portraits")));
@@ -140,7 +139,7 @@ fn setup_assets(
     preloaded_assets: Res<PreloadAssets>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut textures: ResMut<Assets<Image>>,
-    mut save_chars: ResMut<Assets<SaveCharacters>>,
+    mut save_chars: Res<Assets<SaveCharacters>>,
     mut characters: Query<(&IconName, &mut PortraitAtlasId)>,
 ) {
     let mut portrait_indexes = HashMap::new();
@@ -183,13 +182,19 @@ fn setup_assets(
     let portrait_atlas = texture_atlases.add(portrait_texture_atlas);
     let portrait_image = textures.add(portrait_raw_image);
 
-    let mut maps = Vec::new();
+    let mut maps = HashMap::new();
     let loaded_map_folder = loaded_folders.get(&maps_folder.0).unwrap();
     for handle in loaded_map_folder.handles.iter() {
-        let texture_handle = handle.clone();
-        let typed_handle = texture_handle.typed_unchecked::<Image>();
-        debug!("Adding image: {:?}", handle.path().unwrap());
-        maps.push(typed_handle);
+        if let Some(path) = handle.path() {
+            if let Some(path_stem) = path.path().file_stem() {
+                if let Some(stem) = path_stem.to_str() {
+                    let texture_handle = handle.clone();
+                    let typed_handle = texture_handle.typed_unchecked::<Image>();
+                    debug!("adding maps:: {:?}->{:?}", stem.to_string(), typed_handle);
+                    maps.insert(stem.to_string(), typed_handle);
+                }
+            }
+        }
     }
 
     if let Some(e) = save_chars.get(preloaded_assets.characters.id()) {

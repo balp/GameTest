@@ -6,7 +6,8 @@ use bevy::window::PrimaryWindow;
 use rand::Rng;
 
 use crate::asset_loader::CombatAsset;
-use crate::characters::{CharacterName, CharacterSkills, Initiative, NoName, PortraitAtlasId};
+use crate::characters::{CharacterName, CharacterSkills, Initiative, NoName, PortraitAtlasId, SaveCharacters};
+use crate::combat_map::CombatMap;
 use crate::schedule::CombatUpdateSets;
 use crate::states::GameState;
 use crate::utils::despawn_screen;
@@ -114,20 +115,28 @@ fn combat_setup(
     characters: Query<(Entity, &CharacterName, &CharacterSkills, &PortraitAtlasId)>,
     director_characters: Query<(Entity, &NoName, &PortraitAtlasId)>,
     mut game_state: ResMut<NextState<GameState>>,
+    saved_characters: Res<Assets<SaveCharacters>>,
+    combat_maps: Res<Assets<CombatMap>>,
 ) {
     info!("combat_setup...");
     let mut window = windows.single_mut();
     window.resolution.set(2048.0, 1024.0);
 
-    let texture = combat_asset.maps[1].clone();
-    commands.spawn((
-        SpriteBundle {
-            texture,
-            transform: Transform::from_translation(Vec3::new(1024., 0., 0.)),
-            ..default()
-        },
-        OnCombatScreen,
-    ));
+    // Draw map
+    if let Some(combat_map) = combat_maps.get(combat_asset.combat_map.clone()) {
+        debug!("combat_map: {:?}", combat_map);
+        setup_combat_map(&mut commands, combat_map, &combat_asset);
+    }
+
+    // let texture = combat_asset.maps["small_cell_block_60x26"].clone();
+    // commands.spawn((
+    //     SpriteBundle {
+    //         texture,
+    //         transform: Transform::from_translation(Vec3::new(1024., 0., 0.)),
+    //         ..default()
+    //     },
+    //     OnCombatScreen,
+    // ));
 
     commands.spawn((
         SpriteSheetBundle {
@@ -274,6 +283,21 @@ fn combat_setup(
     }
 
     game_state.set(GameState::CombatTurns);
+}
+
+fn setup_combat_map(
+    mut commands: &mut Commands,
+    combat_map: &CombatMap,
+    combat_asset: &Res<CombatAsset>, ) {
+    let texture = combat_asset.maps[&combat_map.bitmap.clone()].clone();
+    commands.spawn((
+        SpriteBundle {
+            texture,
+            transform: Transform::from_translation(Vec3::new(1024., 0., 0.)),
+            ..default()
+        },
+        OnCombatScreen,
+    ));
 }
 
 fn add_combat_token(

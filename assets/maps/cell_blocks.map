@@ -1,5 +1,5 @@
 CombatMap(
-    bitmap: "small_cell_block_60x26.png",
+    bitmap: "small_cell_block_60x26",
     zones: [
         MapZone(position: MapPosition(x_pos: 222., y_pos: 142., height: 190., width: 100.), name: "Cell A11", tag: "cell_a_11", adjacent: [ZoneMove(check: None, tag: "cellblock_a")]),
         MapZone(position: MapPosition(x_pos: 360., y_pos: 142., height: 190., width: 100.), name: "Cell A12", tag: "cell_a_12", adjacent: [ZoneMove(check: None, tag: "cellblock_a")], ),
