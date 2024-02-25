@@ -97,66 +97,15 @@ struct ButtonEnabled;
 
 #[derive(Component)]
 struct CharacterZone;
+
 #[derive(Component)]
 struct AdjacentZone;
+
 #[derive(Component)]
 struct HooverZone;
 
 #[derive(Resource, Default, Debug)]
 struct MyWorldCoords(Vec2);
-
-#[derive(Component, Debug)]
-pub struct ZoneArea {
-    center: Vec3,
-    size: Vec2,
-}
-
-impl ZoneArea {
-    fn in_bounds(&self, pos: Vec2) -> bool {
-        let x_min = self.center.x - self.size.x / 2.;
-        let x_max = self.center.x + self.size.x / 2.;
-        let y_min = self.center.y - self.size.y / 2.;
-        let y_max = self.center.y + self.size.y / 2.;
-
-        pos.x >= x_min && pos.y >= y_min && pos.x <= x_max && pos.y <= y_max
-    }
-}
-
-#[derive(Component, Debug)]
-pub struct ZoneName {
-    tag: String,
-    name: String,
-}
-
-impl ZoneName {
-    pub fn new(tag: &str, name: &str) -> Self {
-        Self {
-            tag: tag.to_string(),
-            name: name.to_string(),
-        }
-    }
-}
-
-#[derive(Bundle, Debug)]
-pub struct Zone {
-    position: ZoneArea,
-    name: ZoneName,
-}
-
-#[derive(Component, Debug)]
-pub struct InZone {
-    name: String,
-    area: Option<Entity>,
-}
-
-impl InZone {
-    pub fn new(name: &str) -> Self {
-        Self {
-            name: name.to_string(),
-            area: None,
-        }
-    }
-}
 
 fn battle_setup(
     mut commands: Commands,
@@ -188,7 +137,7 @@ fn battle_setup(
             },
             atlas: TextureAtlas {
                 layout: battle_asset.portrait_atlas.clone(),
-                index: 0
+                index: 0,
             },
             texture: battle_asset.portrait_image.clone(),
             ..default()
@@ -570,15 +519,13 @@ fn add_zone(
     tag: &str,
     zone_name: &str,
 ) {
-    commands.spawn(
-        Zone {
-            position: ZoneArea {
-                center: Vec3::new(x_pos, y_pos, 1.),
-                size: Vec2::new(width, height),
-            },
-            name: ZoneName::new(tag, zone_name),
+    commands.spawn(Zone {
+        position: ZoneArea {
+            center: Vec3::new(x_pos, y_pos, 1.),
+            size: Vec2::new(width, height),
         },
-    );
+        name: ZoneName::new(tag, zone_name),
+    });
 }
 
 fn my_cursor_system(
@@ -712,6 +659,59 @@ fn draw_icons_in_zone(
                     area.center.z + people_in_zone,
                 );
             }
+        }
+    }
+}
+
+#[derive(Component, Debug)]
+pub struct ZoneArea {
+    pub center: Vec3,
+    pub size: Vec2,
+}
+
+impl ZoneArea {
+    pub fn in_bounds(&self, pos: Vec2) -> bool {
+        let x_min = self.center.x - self.size.x / 2.;
+        let x_max = self.center.x + self.size.x / 2.;
+        let y_min = self.center.y - self.size.y / 2.;
+        let y_max = self.center.y + self.size.y / 2.;
+
+        pos.x >= x_min && pos.y >= y_min && pos.x <= x_max && pos.y <= y_max
+    }
+}
+
+#[derive(Component, Debug)]
+pub struct ZoneName {
+    pub tag: String,
+    pub name: String,
+}
+
+impl ZoneName {
+    pub fn new(tag: &str, name: &str) -> Self {
+        Self {
+            tag: tag.to_string(),
+            name: name.to_string(),
+        }
+    }
+}
+
+#[derive(Bundle, Debug)]
+pub struct Zone {
+    pub position: ZoneArea,
+    pub name: ZoneName,
+}
+
+#[derive(Component, Debug)]
+pub struct InZone {
+    pub name: String,
+    pub area: Option<Entity>,
+}
+
+impl InZone {
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            area: None,
         }
     }
 }

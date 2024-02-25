@@ -1,3 +1,4 @@
+use crate::battle_map::{CombatMap, CombatMapAssetLoader};
 use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
 
 use crate::characters::{
@@ -9,14 +10,15 @@ use crate::states::GameState;
 #[derive(Resource)]
 pub struct PreloadAssets {
     pub(crate) fiction_font: Handle<Font>,
+    pub combat_map: Handle<CombatMap>,
 }
-
 
 #[derive(Resource)]
 pub struct BattleAsset {
     pub portrait_atlas: Handle<TextureAtlasLayout>,
     pub portrait_image: Handle<Image>,
     pub maps: Vec<Handle<Image>>,
+    pub combat_map: Handle<CombatMap>,
 }
 
 const DIALOG_FILE: &str = "dialog/the_cell.talk.ron";
@@ -25,7 +27,9 @@ pub struct AssetLoader;
 
 impl Plugin for AssetLoader {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Splash), show_splash_screen)
+        app.init_asset::<CombatMap>()
+            .init_asset_loader::<CombatMapAssetLoader>()
+            .add_systems(OnEnter(GameState::Splash), show_splash_screen)
             .add_systems(
                 OnEnter(GameState::AssetsLoading),
                 (add_characters, load_assets),
@@ -159,9 +163,10 @@ fn add_characters(mut commands: Commands) {
 
 fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(PortraitIconsFolder(asset_server.load_folder("portraits")));
-    commands.insert_resource(MapsFolder(asset_server.load_folder("maps")));
+    commands.insert_resource(MapsFolder(asset_server.load_folder("maps/bitmaps")));
     commands.insert_resource(PreloadAssets {
         fiction_font: asset_server.load("fonts/gnuolane-free.rg-regular.otf"),
+        combat_map: asset_server.load("maps/cell_blocks.map"),
     });
 }
 
@@ -175,6 +180,7 @@ fn check_assets_loaded(
     mut timer: ResMut<SplashTimer>,
 ) {
     if server.is_loaded_with_dependencies(preloaded_assets.fiction_font.clone())
+        && server.is_loaded_with_dependencies(preloaded_assets.combat_map.clone())
         && server.is_loaded_with_dependencies(&portrait_icons_folder.0)
         && server.is_loaded_with_dependencies(&maps_folder.0)
     {
@@ -221,9 +227,8 @@ fn setup_assets(
         portrait_texture_atlas_builder.add_texture(Some(id), texture);
     }
 
-    let (portrait_texture_atlas, portrait_raw_image) = portrait_texture_atlas_builder
-        .finish()
-        .unwrap();
+    let (portrait_texture_atlas, portrait_raw_image) =
+        portrait_texture_atlas_builder.finish().unwrap();
     let portrait_atlas = texture_atlases.add(portrait_texture_atlas);
     let portrait_image = textures.add(portrait_raw_image);
 
@@ -240,6 +245,7 @@ fn setup_assets(
         portrait_atlas,
         portrait_image,
         maps,
+        combat_map: preloaded_assets.combat_map.clone(),
     };
     commands.insert_resource(battle_asset);
 }
