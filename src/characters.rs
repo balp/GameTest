@@ -1,11 +1,11 @@
+use bevy::prelude::*;
+use bevy::utils::thiserror;
 use bevy::{
-    asset::{AssetLoader, AsyncReadExt, io::Reader, LoadContext, ron},
+    asset::{io::Reader, ron, AssetLoader, AsyncReadExt, LoadContext},
     prelude::*,
     reflect::TypePath,
     utils::BoxedFuture,
 };
-use bevy::prelude::*;
-use bevy::utils::thiserror;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -302,9 +302,15 @@ pub struct SavePlayerCharacter {
 }
 
 impl SavePlayerCharacter {
-    pub fn get_agility(&self) -> u8 { 15 }
-    pub fn get_alertness(&self) -> u8 { 15 }
-    pub fn get_sneak(&self) -> u8 { 15 }
+    pub fn get_agility(&self) -> u8 {
+        15
+    }
+    pub fn get_alertness(&self) -> u8 {
+        15
+    }
+    pub fn get_sneak(&self) -> u8 {
+        15
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -322,7 +328,6 @@ pub enum AttackTag {
     Paralytic,
 }
 
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Attack {
     name: String,
@@ -330,7 +335,6 @@ pub struct Attack {
     damage: u8,
     tags: Vec<AttackTag>,
 }
-
 
 #[derive(Asset, TypePath, Debug, Deserialize, Serialize)]
 pub struct SaveDirectorCharacter {
@@ -383,4 +387,3 @@ impl AssetLoader for CharactersAssetLoader {
         &["characters"]
     }
 }
-

@@ -6,7 +6,9 @@ use bevy::window::PrimaryWindow;
 use rand::Rng;
 
 use crate::asset_loader::CombatAsset;
-use crate::characters::{CharacterName, CharacterSkills, Initiative, NoName, PortraitAtlasId, SaveCharacters};
+use crate::characters::{
+    CharacterName, CharacterSkills, Initiative, NoName, PortraitAtlasId, SaveCharacters,
+};
 use crate::combat_map::CombatMap;
 use crate::schedule::CombatUpdateSets;
 use crate::states::GameState;
@@ -115,7 +117,7 @@ fn combat_setup(
     characters: Query<(Entity, &CharacterName, &CharacterSkills, &PortraitAtlasId)>,
     director_characters: Query<(Entity, &NoName, &PortraitAtlasId)>,
     mut game_state: ResMut<NextState<GameState>>,
-    saved_characters: Res<Assets<SaveCharacters>>,
+    // saved_characters: Res<Assets<SaveCharacters>>,
     combat_maps: Res<Assets<CombatMap>>,
 ) {
     info!("combat_setup...");
@@ -127,16 +129,6 @@ fn combat_setup(
         debug!("combat_map: {:?}", combat_map);
         setup_combat_map(&mut commands, combat_map, &combat_asset);
     }
-
-    // let texture = combat_asset.maps["small_cell_block_60x26"].clone();
-    // commands.spawn((
-    //     SpriteBundle {
-    //         texture,
-    //         transform: Transform::from_translation(Vec3::new(1024., 0., 0.)),
-    //         ..default()
-    //     },
-    //     OnCombatScreen,
-    // ));
 
     commands.spawn((
         SpriteSheetBundle {
@@ -154,83 +146,6 @@ fn combat_setup(
         InitiativeSprite,
         OnCombatScreen,
     ));
-
-    add_zone(
-        &mut commands,
-        222.,
-        142.,
-        190.,
-        100.,
-        "cell_a_11",
-        "Cell A11",
-    );
-    add_zone(
-        &mut commands,
-        360.,
-        142.,
-        190.,
-        100.,
-        "cell_a_12",
-        "Cell A12",
-    );
-    add_zone(
-        &mut commands,
-        495.,
-        142.,
-        190.,
-        100.,
-        "cell_a_13",
-        "Cell A13",
-    );
-
-    add_zone(
-        &mut commands,
-        222.,
-        -142.,
-        190.,
-        100.,
-        "cell_a_21",
-        "Cell A21",
-    );
-    add_zone(
-        &mut commands,
-        360.,
-        -142.,
-        190.,
-        100.,
-        "cell_a_22",
-        "Cell A22",
-    );
-    add_zone(
-        &mut commands,
-        495.,
-        -142.,
-        190.,
-        100.,
-        "cell_a_23",
-        "Cell A23",
-    );
-
-    add_zone(
-        &mut commands,
-        330.,
-        0.,
-        90.,
-        470.,
-        "cellblock_a",
-        "Cell block A",
-    );
-    add_zone(&mut commands, 630., 0., 140., 120., "gate_a", "Gate A");
-    add_zone(&mut commands, 990., 0., 640., 580., "central", "Central");
-    add_zone(
-        &mut commands,
-        1530.,
-        0.,
-        90.,
-        470.,
-        "access_corridor",
-        "Access Corridor",
-    );
 
     for (entity, name, skills, _portait_id) in characters.iter() {
         let mut rng = rand::thread_rng();
@@ -258,6 +173,7 @@ fn combat_setup(
         let character_initiative = Initiative::new(initiative);
         commands.entity(entity).insert(character_initiative);
     }
+
     for (entity, name, _skills, _portait_id) in characters.iter() {
         debug!("Adding player character to {:?}::{:?} map", entity, name);
         commands.entity(entity).insert(InZone::new("cell_a_13"));
@@ -288,7 +204,8 @@ fn combat_setup(
 fn setup_combat_map(
     mut commands: &mut Commands,
     combat_map: &CombatMap,
-    combat_asset: &Res<CombatAsset>, ) {
+    combat_asset: &Res<CombatAsset>,
+) {
     let texture = combat_asset.maps[&combat_map.bitmap.clone()].clone();
     commands.spawn((
         SpriteBundle {
@@ -298,6 +215,22 @@ fn setup_combat_map(
         },
         OnCombatScreen,
     ));
+
+    for zone in combat_map.zones.iter() {
+        add_zone(
+            commands,
+            zone.position.x_pos,
+            zone.position.y_pos,
+            zone.position.height,
+            zone.position.width,
+            zone.tag.as_str(),
+            zone.name.as_str(),
+        );
+    }
+
+    for start_pos in combat_map.start_positions.iter() {
+        debug!("adding: {:?}", start_pos);
+    }
 }
 
 fn add_combat_token(

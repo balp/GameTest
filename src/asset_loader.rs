@@ -1,11 +1,11 @@
 use crate::combat_map::{CombatMap, CombatMapAssetLoader};
-use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
 use bevy::ecs::bundle::DynamicBundle;
 use bevy::utils::HashMap;
+use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
 
 use crate::characters::{
-    CharacterName, CharacterSkills, DirectorCharacter, IconName, Initiative, NoName,
-    PlayerCharacter, PortraitAtlasId, SceneActor, Vitality, SaveCharacters, CharactersAssetLoader,
+    CharacterName, CharacterSkills, CharactersAssetLoader, DirectorCharacter, IconName, Initiative,
+    NoName, PlayerCharacter, PortraitAtlasId, SaveCharacters, SceneActor, Vitality,
 };
 use crate::states::GameState;
 
@@ -36,10 +36,7 @@ impl Plugin for AssetLoader {
             .init_asset_loader::<CombatMapAssetLoader>()
             .init_asset_loader::<CharactersAssetLoader>()
             .add_systems(OnEnter(GameState::Splash), show_splash_screen)
-            .add_systems(
-                OnEnter(GameState::AssetsLoading),
-                (load_assets),
-            )
+            .add_systems(OnEnter(GameState::AssetsLoading), (load_assets))
             .add_systems(
                 Update,
                 check_assets_loaded.run_if(in_state(GameState::AssetsLoading)),
@@ -99,7 +96,6 @@ fn show_splash_screen(
     game_state.set(GameState::AssetsLoading);
 }
 
-
 fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(PortraitIconsFolder(asset_server.load_folder("portraits")));
     commands.insert_resource(MapsFolder(asset_server.load_folder("maps/bitmaps")));
@@ -143,7 +139,6 @@ fn setup_assets(
     mut characters: Query<(&IconName, &mut PortraitAtlasId)>,
 ) {
     let mut portrait_indexes = HashMap::new();
-
 
     let mut portrait_texture_atlas_builder = TextureAtlasBuilder::default();
     let loaded_portrait_folder = loaded_folders.get(&portrait_icons_folder.0).unwrap();
@@ -210,10 +205,20 @@ fn setup_assets(
                         first: player_char.name.first.clone(),
                         last: player_char.name.last.clone(),
                     },
-                    icon: IconName { slug: player_char.tag.clone() },
-                    portrait: PortraitAtlasId { index: index.clone() },
-                    skills: CharacterSkills::new(player_char.get_agility(), player_char.get_alertness(), player_char.get_sneak()),
-                    vitality: Vitality { value: player_char.vitality },
+                    icon: IconName {
+                        slug: player_char.tag.clone(),
+                    },
+                    portrait: PortraitAtlasId {
+                        index: index.clone(),
+                    },
+                    skills: CharacterSkills::new(
+                        player_char.get_agility(),
+                        player_char.get_alertness(),
+                        player_char.get_sneak(),
+                    ),
+                    vitality: Vitality {
+                        value: player_char.vitality,
+                    },
                 });
             }
         }
@@ -228,10 +233,18 @@ fn setup_assets(
                         alias: directory_char.tag.clone(),
                         generic: directory_char.tag.clone(),
                     },
-                    icon: IconName { slug: directory_char.tag.clone() },
-                    portrait: PortraitAtlasId { index: index.clone() },
-                    initiative: Initiative { value: directory_char.initiative },
-                    vitality: Vitality { value: directory_char.vitality },
+                    icon: IconName {
+                        slug: directory_char.tag.clone(),
+                    },
+                    portrait: PortraitAtlasId {
+                        index: index.clone(),
+                    },
+                    initiative: Initiative {
+                        value: directory_char.initiative,
+                    },
+                    vitality: Vitality {
+                        value: directory_char.vitality,
+                    },
                 });
             }
         }

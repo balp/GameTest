@@ -16,10 +16,10 @@ pub struct ZoneMove {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MapPosition {
-    x_pos: f32,
-    y_pos: f32,
-    height: f32,
-    width: f32,
+    pub x_pos: f32,
+    pub y_pos: f32,
+    pub height: f32,
+    pub width: f32,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
