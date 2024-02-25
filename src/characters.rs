@@ -1,19 +1,17 @@
+use bevy::prelude::*;
+use bevy::utils::thiserror;
 use bevy::{
-    asset::{AssetLoader, AsyncReadExt, io::Reader, LoadContext, ron},
+    asset::{io::Reader, ron, AssetLoader, AsyncReadExt, LoadContext},
     reflect::TypePath,
     utils::BoxedFuture,
 };
-use bevy::prelude::*;
-use bevy::utils::thiserror;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-#[derive(Component, Debug)]
-#[derive(Default)]
+#[derive(Component, Debug, Default)]
 pub struct PortraitAtlasId {
     pub index: usize,
 }
-
 
 #[derive(Component, Debug)]
 pub struct IconName {
@@ -66,7 +64,6 @@ impl CharacterSkills {
 pub struct Vitality {
     pub value: u8,
 }
-
 
 #[derive(Component, Debug)]
 pub struct Initiative {

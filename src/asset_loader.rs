@@ -207,9 +207,7 @@ fn setup_assets(
                     icon: IconName {
                         slug: player_char.tag.clone(),
                     },
-                    portrait: PortraitAtlasId {
-                        index: *index,
-                    },
+                    portrait: PortraitAtlasId { index: *index },
                     skills: CharacterSkills::new(
                         player_char.get_agility(),
                         player_char.get_alertness(),
@@ -235,9 +233,7 @@ fn setup_assets(
                     icon: IconName {
                         slug: directory_char.tag.clone(),
                     },
-                    portrait: PortraitAtlasId {
-                        index: *index,
-                    },
+                    portrait: PortraitAtlasId { index: *index },
                     initiative: Initiative {
                         value: directory_char.initiative,
                     },

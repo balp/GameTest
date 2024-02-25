@@ -6,9 +6,7 @@ use bevy::window::PrimaryWindow;
 use rand::Rng;
 
 use crate::asset_loader::CombatAsset;
-use crate::characters::{
-    CharacterName, CharacterSkills, Initiative, NoName, PortraitAtlasId,
-};
+use crate::characters::{CharacterName, CharacterSkills, Initiative, NoName, PortraitAtlasId};
 use crate::combat_map::CombatMap;
 use crate::schedule::CombatUpdateSets;
 use crate::states::GameState;
@@ -28,7 +26,7 @@ impl Plugin for Combat {
             .add_systems(OnEnter(GameState::CombatTurns), action_menu)
             .add_systems(
                 Update,
-                (enable_buttons, )
+                (enable_buttons,)
                     .run_if(in_state(GameState::CombatTurns))
                     .in_set(CombatUpdateSets::TurnChanges),
             )
