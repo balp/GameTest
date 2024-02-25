@@ -2,25 +2,21 @@ use bevy::prelude::*;
 use bevy::utils::thiserror;
 use bevy::{
     asset::{io::Reader, ron, AssetLoader, AsyncReadExt, LoadContext},
-    prelude::*,
     reflect::TypePath,
     utils::BoxedFuture,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::combat_map::{CombatMap, CombatMapAssetLoader, CombatMapAssetLoaderError};
+
 
 #[derive(Component, Debug)]
+#[derive(Default)]
 pub(crate) struct PortraitAtlasId {
     pub(crate) index: usize,
 }
 
-impl Default for PortraitAtlasId {
-    fn default() -> Self {
-        Self { index: 0 }
-    }
-}
+
 
 #[derive(Component, Debug)]
 pub struct IconName {
