@@ -25,8 +25,6 @@ pub struct CombatAsset {
     pub characters: Handle<SaveCharacters>,
 }
 
-const DIALOG_FILE: &str = "dialog/the_cell.talk.ron";
-
 pub struct AssetLoader;
 
 impl Plugin for AssetLoader {
@@ -127,6 +125,7 @@ fn check_assets_loaded(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn setup_assets(
     mut commands: Commands,
     loaded_folders: Res<Assets<LoadedFolder>>,

@@ -7,7 +7,6 @@ pub enum GameState {
     AssetsLoading,
     AssetsSetup,
     AssetsFailed,
-    InteractiveFiction,
     Combat,
     CombatTurns,
     CombatEnded,

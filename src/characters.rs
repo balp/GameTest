@@ -1,21 +1,18 @@
-use bevy::prelude::*;
-use bevy::utils::thiserror;
 use bevy::{
-    asset::{io::Reader, ron, AssetLoader, AsyncReadExt, LoadContext},
+    asset::{AssetLoader, AsyncReadExt, io::Reader, LoadContext, ron},
     reflect::TypePath,
     utils::BoxedFuture,
 };
+use bevy::prelude::*;
+use bevy::utils::thiserror;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-
-
 #[derive(Component, Debug)]
 #[derive(Default)]
-pub(crate) struct PortraitAtlasId {
-    pub(crate) index: usize,
+pub struct PortraitAtlasId {
+    pub index: usize,
 }
-
 
 
 #[derive(Component, Debug)]
@@ -23,36 +20,17 @@ pub struct IconName {
     pub slug: String,
 }
 
-impl IconName {
-    pub fn new(slug: &str) -> Self {
-        Self {
-            slug: slug.to_string(),
-        }
-    }
-}
-
 #[derive(Component, Debug)]
-pub(crate) struct CharacterName {
-    pub(crate) slug: String,
-    pub(crate) alias: String,
-    pub(crate) first: String,
-    pub(crate) last: String,
-}
-
-impl CharacterName {
-    pub(crate) fn new(slug: &str, alias: &str, first: &str, last: &str) -> CharacterName {
-        CharacterName {
-            slug: slug.to_string(),
-            alias: alias.to_string(),
-            first: first.to_string(),
-            last: last.to_string(),
-        }
-    }
+pub struct CharacterName {
+    pub slug: String,
+    pub alias: String,
+    pub first: String,
+    pub last: String,
 }
 
 #[derive(Debug)]
-pub(crate) struct Skill {
-    pub(crate) value: u8,
+pub struct Skill {
+    pub value: u8,
 }
 
 impl Default for Skill {
@@ -68,10 +46,10 @@ impl Skill {
 }
 
 #[derive(Component, Debug)]
-pub(crate) struct CharacterSkills {
-    pub(crate) agility: Skill,
-    pub(crate) alertness: Skill,
-    pub(crate) sneak: Skill,
+pub struct CharacterSkills {
+    pub agility: Skill,
+    pub alertness: Skill,
+    pub sneak: Skill,
 }
 
 impl CharacterSkills {
@@ -89,11 +67,6 @@ pub struct Vitality {
     pub value: u8,
 }
 
-impl Vitality {
-    pub fn new(value: u8) -> Self {
-        Self { value }
-    }
-}
 
 #[derive(Component, Debug)]
 pub struct Initiative {
@@ -116,26 +89,16 @@ pub struct PlayerCharacter {
 }
 
 #[derive(Bundle, Debug)]
-pub(crate) struct SceneActor {
-    pub(crate) name: CharacterName,
-    pub(crate) portrait: PortraitAtlasId,
+pub struct SceneActor {
+    pub name: CharacterName,
+    pub portrait: PortraitAtlasId,
 }
 
 #[derive(Component, Debug)]
-pub(crate) struct NoName {
-    pub(crate) slug: String,
-    pub(crate) alias: String,
-    pub(crate) generic: String,
-}
-
-impl NoName {
-    pub fn new(slug: &str, alias: &str, generic: &str) -> Self {
-        Self {
-            slug: slug.to_string(),
-            alias: alias.to_string(),
-            generic: generic.to_string(),
-        }
-    }
+pub struct NoName {
+    pub slug: String,
+    pub alias: String,
+    pub generic: String,
 }
 
 #[derive(Bundle, Debug)]
