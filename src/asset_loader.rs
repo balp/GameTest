@@ -1,11 +1,11 @@
 use crate::combat_map::{CombatMap, CombatMapAssetLoader};
-use bevy::ecs::bundle::DynamicBundle;
+
 use bevy::utils::HashMap;
 use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
 
 use crate::characters::{
     CharacterName, CharacterSkills, CharactersAssetLoader, DirectorCharacter, IconName, Initiative,
-    NoName, PlayerCharacter, PortraitAtlasId, SaveCharacters, SceneActor, Vitality,
+    NoName, PlayerCharacter, PortraitAtlasId, SaveCharacters, Vitality,
 };
 use crate::states::GameState;
 
@@ -36,7 +36,7 @@ impl Plugin for AssetLoader {
             .init_asset_loader::<CombatMapAssetLoader>()
             .init_asset_loader::<CharactersAssetLoader>()
             .add_systems(OnEnter(GameState::Splash), show_splash_screen)
-            .add_systems(OnEnter(GameState::AssetsLoading), (load_assets))
+            .add_systems(OnEnter(GameState::AssetsLoading), load_assets)
             .add_systems(
                 Update,
                 check_assets_loaded.run_if(in_state(GameState::AssetsLoading)),
@@ -135,7 +135,7 @@ fn setup_assets(
     preloaded_assets: Res<PreloadAssets>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut textures: ResMut<Assets<Image>>,
-    mut save_chars: Res<Assets<SaveCharacters>>,
+    save_chars: Res<Assets<SaveCharacters>>,
     mut characters: Query<(&IconName, &mut PortraitAtlasId)>,
 ) {
     let mut portrait_indexes = HashMap::new();
@@ -144,7 +144,7 @@ fn setup_assets(
     let loaded_portrait_folder = loaded_folders.get(&portrait_icons_folder.0).unwrap();
     for (index, handle) in loaded_portrait_folder.handles.iter().enumerate() {
         let id = handle.id().typed_unchecked::<Image>();
-        let path = handle.path().clone();
+        let path = handle.path();
         let Some(texture) = textures.get(id) else {
             warn!(
                 "{:?} did not resolve to an `Image` asset.",
@@ -209,7 +209,7 @@ fn setup_assets(
                         slug: player_char.tag.clone(),
                     },
                     portrait: PortraitAtlasId {
-                        index: index.clone(),
+                        index: *index,
                     },
                     skills: CharacterSkills::new(
                         player_char.get_agility(),
@@ -237,7 +237,7 @@ fn setup_assets(
                         slug: directory_char.tag.clone(),
                     },
                     portrait: PortraitAtlasId {
-                        index: index.clone(),
+                        index: *index,
                     },
                     initiative: Initiative {
                         value: directory_char.initiative,

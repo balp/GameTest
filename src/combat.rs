@@ -7,7 +7,7 @@ use rand::Rng;
 
 use crate::asset_loader::CombatAsset;
 use crate::characters::{
-    CharacterName, CharacterSkills, Initiative, NoName, PortraitAtlasId, SaveCharacters,
+    CharacterName, CharacterSkills, Initiative, NoName, PortraitAtlasId,
 };
 use crate::combat_map::CombatMap;
 use crate::schedule::CombatUpdateSets;
@@ -202,7 +202,7 @@ fn combat_setup(
 }
 
 fn setup_combat_map(
-    mut commands: &mut Commands,
+    commands: &mut Commands,
     combat_map: &CombatMap,
     combat_asset: &Res<CombatAsset>,
 ) {
@@ -540,10 +540,10 @@ fn setup_zone_sprites(mut commands: Commands, zones: Query<(Entity, &ZoneArea, &
             SpriteBundle {
                 sprite: Sprite {
                     color: Color::rgba(0.941, 0.0, 1.0, 0.5),
-                    custom_size: Some(area.size.clone()),
+                    custom_size: Some(area.size),
                     ..default()
                 },
-                transform: Transform::from_translation(area.center.clone()),
+                transform: Transform::from_translation(area.center),
                 ..default()
             },
             OnCombatScreen,
