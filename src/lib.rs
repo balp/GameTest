@@ -1,1 +1,2 @@
-pub mod battle_map;
+pub mod combat_map;
+pub mod characters;

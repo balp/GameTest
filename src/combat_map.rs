@@ -30,10 +30,17 @@ pub struct MapZone {
     pub adjacent: Vec<ZoneMove>,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct StartPosition {
+    pub entity_tag: String,
+    pub zone_tag: String,
+}
+
 #[derive(Asset, TypePath, Debug, Deserialize, Serialize)]
 pub struct CombatMap {
     pub bitmap: String,
     pub zones: Vec<MapZone>,
+    pub start_positions: Vec<StartPosition>,
 }
 
 #[derive(Default)]
@@ -69,6 +76,6 @@ impl AssetLoader for CombatMapAssetLoader {
     }
 
     fn extensions(&self) -> &[&str] {
-        &["custom"]
+        &["map"]
     }
 }

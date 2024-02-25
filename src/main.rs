@@ -4,8 +4,8 @@ use bevy::log::LogPlugin;
 use bevy::prelude::*;
 
 mod asset_loader;
-mod battle;
-mod battle_map;
+mod combat;
+mod combat_map;
 mod characters;
 mod end_scene;
 mod schedule;
@@ -23,10 +23,10 @@ fn main() {
             filter: "info,wgpu_core=warn,wgpu_hal=warn,game_test=debug".into(),
             level: bevy::log::Level::DEBUG,
             ..default()
-        }),))
+        }), ))
         .init_state::<states::GameState>()
         .add_systems(Startup, setup)
-        .add_plugins((asset_loader::AssetLoader, end_scene::TheEnd, battle::Battle))
+        .add_plugins((asset_loader::AssetLoader, end_scene::TheEnd, combat::Combat))
         .run();
 }
 

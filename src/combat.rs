@@ -5,35 +5,35 @@ use bevy::utils::HashMap;
 use bevy::window::PrimaryWindow;
 use rand::Rng;
 
-use crate::asset_loader::BattleAsset;
+use crate::asset_loader::CombatAsset;
 use crate::characters::{CharacterName, CharacterSkills, Initiative, NoName, PortraitAtlasId};
-use crate::schedule::BattleUpdateSets;
+use crate::schedule::CombatUpdateSets;
 use crate::states::GameState;
 use crate::utils::despawn_screen;
 use crate::MainCamera;
 
-pub struct Battle;
+pub struct Combat;
 
-impl Plugin for Battle {
+impl Plugin for Combat {
     fn build(&self, app: &mut App) {
         app.init_resource::<MyWorldCoords>()
-            .add_systems(OnEnter(GameState::Battle), battle_setup)
+            .add_systems(OnEnter(GameState::Combat), combat_setup)
             .add_systems(
-                OnExit(GameState::Battle),
+                OnExit(GameState::Combat),
                 (set_starting_initiative, setup_zone_sprites, resolve_zones),
             )
-            .add_systems(OnEnter(GameState::BattleTurns), action_menu)
+            .add_systems(OnEnter(GameState::CombatTurns), action_menu)
             .add_systems(
                 Update,
-                (enable_buttons,)
-                    .run_if(in_state(GameState::BattleTurns))
-                    .in_set(BattleUpdateSets::TurnChanges),
+                (enable_buttons, )
+                    .run_if(in_state(GameState::CombatTurns))
+                    .in_set(CombatUpdateSets::TurnChanges),
             )
             .add_systems(
                 Update,
                 (my_cursor_system, button_interaction_system)
-                    .run_if(in_state(GameState::BattleTurns))
-                    .in_set(BattleUpdateSets::UserInput),
+                    .run_if(in_state(GameState::CombatTurns))
+                    .in_set(CombatUpdateSets::UserInput),
             )
             .add_systems(
                 Update,
@@ -44,23 +44,23 @@ impl Plugin for Battle {
                     render_zones,
                     bevy::window::close_on_esc,
                 )
-                    .run_if(in_state(GameState::BattleTurns))
-                    .in_set(BattleUpdateSets::EntityUpdates),
+                    .run_if(in_state(GameState::CombatTurns))
+                    .in_set(CombatUpdateSets::EntityUpdates),
             )
             .add_systems(
                 Update,
                 (draw_icons_in_zone, bevy::window::close_on_esc)
-                    .run_if(in_state(GameState::BattleEnded)),
+                    .run_if(in_state(GameState::CombatEnded)),
             )
             .add_systems(
-                OnExit(GameState::BattleEnded),
-                despawn_screen::<OnBattleScreen>,
+                OnExit(GameState::CombatEnded),
+                despawn_screen::<OnCombatScreen>,
             );
     }
 }
 
 #[derive(Component)]
-struct OnBattleScreen;
+struct OnCombatScreen;
 
 #[derive(Component)]
 struct InitiativeSprite;
@@ -107,26 +107,26 @@ struct HooverZone;
 #[derive(Resource, Default, Debug)]
 struct MyWorldCoords(Vec2);
 
-fn battle_setup(
+fn combat_setup(
     mut commands: Commands,
-    battle_asset: Res<BattleAsset>,
+    combat_asset: Res<CombatAsset>,
     mut windows: Query<&mut Window>,
     characters: Query<(Entity, &CharacterName, &CharacterSkills, &PortraitAtlasId)>,
     director_characters: Query<(Entity, &NoName, &PortraitAtlasId)>,
     mut game_state: ResMut<NextState<GameState>>,
 ) {
-    info!("battle_setup...");
+    info!("combat_setup...");
     let mut window = windows.single_mut();
     window.resolution.set(2048.0, 1024.0);
 
-    let texture = battle_asset.maps[1].clone();
+    let texture = combat_asset.maps[1].clone();
     commands.spawn((
         SpriteBundle {
             texture,
             transform: Transform::from_translation(Vec3::new(1024., 0., 0.)),
             ..default()
         },
-        OnBattleScreen,
+        OnCombatScreen,
     ));
 
     commands.spawn((
@@ -136,14 +136,14 @@ fn battle_setup(
                 ..default()
             },
             atlas: TextureAtlas {
-                layout: battle_asset.portrait_atlas.clone(),
+                layout: combat_asset.portrait_atlas.clone(),
                 index: 0,
             },
-            texture: battle_asset.portrait_image.clone(),
+            texture: combat_asset.portrait_image.clone(),
             ..default()
         },
         InitiativeSprite,
-        OnBattleScreen,
+        OnCombatScreen,
     ));
 
     add_zone(
@@ -256,7 +256,7 @@ fn battle_setup(
     let mut x_pos = 100.;
     for (entity, name, _skills, portait_id) in characters.iter() {
         debug!("Setup character portrait {:?}::{:?} map", name, portait_id);
-        add_battle_token(&mut commands, &battle_asset, x_pos, entity, portait_id);
+        add_combat_token(&mut commands, &combat_asset, x_pos, entity, portait_id);
         x_pos += 100.;
     }
 
@@ -269,16 +269,16 @@ fn battle_setup(
             "Adding director character portrait {:?}::{:?} map",
             entity, portait_id
         );
-        add_battle_token(&mut commands, &battle_asset, x_pos, entity, portait_id);
+        add_combat_token(&mut commands, &combat_asset, x_pos, entity, portait_id);
         x_pos += 100.;
     }
 
-    game_state.set(GameState::BattleTurns);
+    game_state.set(GameState::CombatTurns);
 }
 
-fn add_battle_token(
+fn add_combat_token(
     commands: &mut Commands,
-    battle_asset: &Res<BattleAsset>,
+    combat_asset: &Res<CombatAsset>,
     x_pos: f32,
     entity: Entity,
     portait_id: &PortraitAtlasId,
@@ -290,13 +290,13 @@ fn add_battle_token(
                 ..default()
             },
             atlas: TextureAtlas {
-                layout: battle_asset.portrait_atlas.clone(),
+                layout: combat_asset.portrait_atlas.clone(),
                 index: portait_id.index,
             },
-            texture: battle_asset.portrait_image.clone(),
+            texture: combat_asset.portrait_image.clone(),
             ..default()
         },
-        OnBattleScreen,
+        OnCombatScreen,
     ));
 }
 
@@ -589,7 +589,7 @@ fn setup_zone_sprites(mut commands: Commands, zones: Query<(Entity, &ZoneArea, &
                 transform: Transform::from_translation(area.center.clone()),
                 ..default()
             },
-            OnBattleScreen,
+            OnCombatScreen,
         ));
     }
 }

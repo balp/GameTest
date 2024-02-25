@@ -1,9 +1,11 @@
-use crate::battle_map::{CombatMap, CombatMapAssetLoader};
+use crate::combat_map::{CombatMap, CombatMapAssetLoader};
 use bevy::{asset::Handle, asset::LoadedFolder, prelude::*};
+use bevy::ecs::bundle::DynamicBundle;
+use bevy::utils::HashMap;
 
 use crate::characters::{
     CharacterName, CharacterSkills, DirectorCharacter, IconName, Initiative, NoName,
-    PlayerCharacter, PortraitAtlasId, SceneActor, Vitality,
+    PlayerCharacter, PortraitAtlasId, SceneActor, Vitality, SaveCharacters, CharactersAssetLoader,
 };
 use crate::states::GameState;
 
@@ -11,14 +13,16 @@ use crate::states::GameState;
 pub struct PreloadAssets {
     pub(crate) fiction_font: Handle<Font>,
     pub combat_map: Handle<CombatMap>,
+    pub characters: Handle<SaveCharacters>,
 }
 
 #[derive(Resource)]
-pub struct BattleAsset {
+pub struct CombatAsset {
     pub portrait_atlas: Handle<TextureAtlasLayout>,
     pub portrait_image: Handle<Image>,
     pub maps: Vec<Handle<Image>>,
     pub combat_map: Handle<CombatMap>,
+    pub characters: Handle<SaveCharacters>,
 }
 
 const DIALOG_FILE: &str = "dialog/the_cell.talk.ron";
@@ -28,7 +32,9 @@ pub struct AssetLoader;
 impl Plugin for AssetLoader {
     fn build(&self, app: &mut App) {
         app.init_asset::<CombatMap>()
+            .init_asset::<SaveCharacters>()
             .init_asset_loader::<CombatMapAssetLoader>()
+            .init_asset_loader::<CharactersAssetLoader>()
             .add_systems(OnEnter(GameState::Splash), show_splash_screen)
             .add_systems(
                 OnEnter(GameState::AssetsLoading),
@@ -167,6 +173,7 @@ fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(PreloadAssets {
         fiction_font: asset_server.load("fonts/gnuolane-free.rg-regular.otf"),
         combat_map: asset_server.load("maps/cell_blocks.map"),
+        characters: asset_server.load("characters.characters"),
     });
 }
 
@@ -181,6 +188,7 @@ fn check_assets_loaded(
 ) {
     if server.is_loaded_with_dependencies(preloaded_assets.fiction_font.clone())
         && server.is_loaded_with_dependencies(preloaded_assets.combat_map.clone())
+        && server.is_loaded_with_dependencies(preloaded_assets.characters.clone())
         && server.is_loaded_with_dependencies(&portrait_icons_folder.0)
         && server.is_loaded_with_dependencies(&maps_folder.0)
     {
@@ -198,8 +206,12 @@ fn setup_assets(
     preloaded_assets: Res<PreloadAssets>,
     mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
     mut textures: ResMut<Assets<Image>>,
+    mut save_chars: ResMut<Assets<SaveCharacters>>,
     mut characters: Query<(&IconName, &mut PortraitAtlasId)>,
 ) {
+    let mut portrait_indexes = HashMap::new();
+
+
     let mut portrait_texture_atlas_builder = TextureAtlasBuilder::default();
     let loaded_portrait_folder = loaded_folders.get(&portrait_icons_folder.0).unwrap();
     for (index, handle) in loaded_portrait_folder.handles.iter().enumerate() {
@@ -215,6 +227,11 @@ fn setup_assets(
         debug!("Loaded texture: {index:?} - {path:?} - {id:?}");
         if let Some(asset_path) = path {
             if let Some(stem) = asset_path.path().file_stem() {
+                if let Some(base_name) = stem.to_str() {
+                    portrait_indexes.insert(base_name, index);
+                }
+
+                debug!("save: {:?} == {:?}", stem, index);
                 for (name, mut atlasid) in characters.iter_mut() {
                     debug!("{:?} == {:?}: {:?}", stem, name, atlasid);
                     if stem == name.slug.as_str() {
@@ -241,16 +258,42 @@ fn setup_assets(
         maps.push(typed_handle);
     }
 
-    let battle_asset = BattleAsset {
+    debug!("Setup player characters");
+    if let Some(e) = save_chars.get(preloaded_assets.characters.id()) {
+        for (i, player_char) in e.player_characters.iter().enumerate() {
+            debug!("pc got: {:?} -> {:?}", i, player_char);
+            if let Some(index) = portrait_indexes.get(player_char.tag.as_str()) {
+                debug!("index: {:?} -> {:?}", i, index);
+                commands.spawn(PlayerCharacter {
+                    name: CharacterName {
+                        slug: player_char.tag.clone(),
+                        alias: player_char.name.alias.clone(),
+                        first: player_char.name.first.clone(),
+                        last: player_char.name.last.clone(),
+                    },
+                    icon: IconName { slug: player_char.tag.clone() },
+                    portrait: PortraitAtlasId { index: index.clone() },
+                    skills: CharacterSkills::new(player_char.get_agility(), player_char.get_alertness(), player_char.get_sneak()),
+                    vitality: Vitality { value: player_char.vitality },
+                });
+            }
+        }
+        for (i, c) in e.director_characters.iter().enumerate() {
+            debug!("dc got: {:?} -> {:?}", i, c);
+        }
+    }
+
+    let combat_asset = CombatAsset {
         portrait_atlas,
         portrait_image,
         maps,
         combat_map: preloaded_assets.combat_map.clone(),
+        characters: preloaded_assets.characters.clone(),
     };
-    commands.insert_resource(battle_asset);
+    commands.insert_resource(combat_asset);
 }
 
 fn to_game(mut game_state: ResMut<NextState<GameState>>) {
     info!("to_game()");
-    game_state.set(GameState::Battle);
+    game_state.set(GameState::Combat);
 }
