@@ -99,73 +99,7 @@ fn show_splash_screen(
     game_state.set(GameState::AssetsLoading);
 }
 
-fn add_characters(mut commands: Commands) {
-    commands.spawn(PlayerCharacter {
-        name: CharacterName::new("elektra", "Electra", "Elektra", "Ambrosia"),
-        icon: IconName::new("elektra"),
-        portrait: PortraitAtlasId::default(),
-        skills: CharacterSkills::new(15, 65, 15),
-        vitality: Vitality::new(5),
-    });
-    commands.spawn(PlayerCharacter {
-        name: CharacterName::new("yurika", "Yurika", "Yurika", "Mishida"),
-        icon: IconName::new("yurika"),
-        portrait: PortraitAtlasId::default(),
-        skills: CharacterSkills::new(15, 65, 15),
-        vitality: Vitality::new(5),
-    });
-    commands.spawn(PlayerCharacter {
-        name: CharacterName::new("paul", "Paul", "Paul", "Marchand"),
-        icon: IconName::new("paul"),
-        portrait: PortraitAtlasId::default(),
-        skills: CharacterSkills::new(65, 45, 65),
-        vitality: Vitality::new(6),
-    });
-    commands.spawn(PlayerCharacter {
-        name: CharacterName::new("harry", "Harry", "Harold", "Fitzroy"),
-        icon: IconName::new("harry"),
-        portrait: PortraitAtlasId::default(),
-        skills: CharacterSkills::new(65, 45, 15),
-        vitality: Vitality::new(6),
-    });
-    commands.spawn(PlayerCharacter {
-        name: CharacterName::new("frida", "Frida", "Anni-Frid", "Bäckströn"),
-        icon: IconName::new("frida"),
-        portrait: PortraitAtlasId::default(),
-        skills: CharacterSkills::new(45, 65, 15),
-        vitality: Vitality::new(6),
-    });
-    commands.spawn(PlayerCharacter {
-        name: CharacterName::new("eloise", "Éloïse", "Éloïse", "Giraud"),
-        icon: IconName::new("eloise"),
-        portrait: PortraitAtlasId::default(),
-        skills: CharacterSkills::new(15, 15, 15),
-        vitality: Vitality::new(5),
-    });
-
-    commands.spawn(SceneActor {
-        name: CharacterName::new("narrator", "Narrator", "", ""),
-        portrait: PortraitAtlasId::default(),
-    });
-    commands.spawn(SceneActor {
-        name: CharacterName::new("empty", "", "", ""),
-        portrait: PortraitAtlasId::default(),
-    });
-    commands.spawn(DirectorCharacter {
-        name: NoName::new("guard_1", "Guard 1", "octopus_guard"),
-        icon: IconName::new("guard"),
-        portrait: PortraitAtlasId::default(),
-        initiative: Initiative::new(2),
-        vitality: Vitality::new(2),
-    });
-    commands.spawn(DirectorCharacter {
-        name: NoName::new("guard_2", "Guard 2", "octopus_guard"),
-        icon: IconName::new("guard"),
-        portrait: PortraitAtlasId::default(),
-        initiative: Initiative::new(2),
-        vitality: Vitality::new(2),
-    });
-}
+fn add_characters(mut commands: Commands) {}
 
 fn load_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(PortraitIconsFolder(asset_server.load_folder("portraits")));
@@ -258,8 +192,8 @@ fn setup_assets(
         maps.push(typed_handle);
     }
 
-    debug!("Setup player characters");
     if let Some(e) = save_chars.get(preloaded_assets.characters.id()) {
+        debug!("Setup player characters");
         for (i, player_char) in e.player_characters.iter().enumerate() {
             debug!("pc got: {:?} -> {:?}", i, player_char);
             if let Some(index) = portrait_indexes.get(player_char.tag.as_str()) {
@@ -278,8 +212,23 @@ fn setup_assets(
                 });
             }
         }
-        for (i, c) in e.director_characters.iter().enumerate() {
-            debug!("dc got: {:?} -> {:?}", i, c);
+        debug!("Setup director characters");
+        for (i, directory_char) in e.director_characters.iter().enumerate() {
+            debug!("dc got: {:?} -> {:?}", i, directory_char);
+            if let Some(index) = portrait_indexes.get(directory_char.tag.as_str()) {
+                debug!("index: {:?} -> {:?}", i, index);
+                commands.spawn(DirectorCharacter {
+                    name: NoName {
+                        slug: directory_char.tag.clone(),
+                        alias: directory_char.tag.clone(),
+                        generic: directory_char.tag.clone(),
+                    },
+                    icon: IconName { slug: directory_char.tag.clone() },
+                    portrait: PortraitAtlasId { index: index.clone() },
+                    initiative: Initiative { value: directory_char.initiative },
+                    vitality: Vitality { value: directory_char.vitality },
+                });
+            }
         }
     }
 
