@@ -5,10 +5,11 @@ use bevy::{
     reflect::TypePath,
     utils::BoxedFuture,
 };
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-#[derive(Component, Debug, Default)]
+#[derive(Component, Debug, Default, Clone)]
 pub struct PortraitAtlasId {
     pub index: usize,
 }
@@ -116,34 +117,34 @@ pub struct PlayerName {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum SkillType {
-    Agility { value: u8 },
-    Alertness { value: u8 },
-    Charm { value: u8 },
-    Contacts { value: u8 },
-    Credit { value: u8 },
-    Electronics { value: u8 },
-    Endurance { value: u8 },
-    Engineering { value: u8 },
-    Entertainment { value: u8 },
-    Humanities { value: u8 },
-    Investigation { value: u8 },
-    Languages { value: u8 },
-    Machinery { value: u8 },
-    Medicine { value: u8 },
-    Melee { value: u8 },
-    Prestidigitation { value: u8 },
-    RangedCombat { value: u8 },
-    RedTape { value: u8 },
-    Science { value: u8 },
-    Search { value: u8 },
-    Security { value: u8 },
-    Sneak { value: u8 },
-    Status { value: u8 },
-    Strength { value: u8 },
-    Subterfuge { value: u8 },
-    Survival { value: u8 },
-    Vehicles { value: u8 },
-    Willpower { value: u8 },
+    Agility(u8),
+    Alertness(u8),
+    Charm(u8),
+    Contacts(u8),
+    Credit(u8),
+    Electronics(u8),
+    Endurance(u8),
+    Engineering(u8),
+    Entertainment(u8),
+    Humanities(u8),
+    Investigation(u8),
+    Languages(u8),
+    Machinery(u8),
+    Medicine(u8),
+    Melee(u8),
+    Prestidigitation(u8),
+    RangedCombat(u8),
+    RedTape(u8),
+    Science(u8),
+    Search(u8),
+    Security(u8),
+    Sneak(u8),
+    Status(u8),
+    Strength(u8),
+    Subterfuge(u8),
+    Survival(u8),
+    Vehicles(u8),
+    Willpower(u8),
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -259,13 +260,61 @@ pub struct SavePlayerCharacter {
 
 impl SavePlayerCharacter {
     pub fn get_agility(&self) -> u8 {
+        for skill in self.skills.iter() {
+            match skill {
+                SkillType::Agility(value) => {
+                    return value.clone();
+                }
+                _ => {}
+            }
+        }
         15
     }
     pub fn get_alertness(&self) -> u8 {
+        for skill in self.skills.iter() {
+            match skill {
+                SkillType::Alertness(value) => {
+                    return value.clone();
+                }
+                _ => {}
+            }
+        }
         15
     }
     pub fn get_sneak(&self) -> u8 {
+        for skill in self.skills.iter() {
+            match skill {
+                SkillType::Sneak(value) => {
+                    return value.clone();
+                }
+                _ => {}
+            }
+        }
         15
+    }
+
+    pub fn initiative(&self) -> u8 {
+        let mut rng = rand::thread_rng();
+        let roll = rng.gen_range(1..=100);
+        let tens = roll / 10u8;
+        let once = roll % 10u8;
+        match self.get_alertness() {
+            x if x <= roll => {
+                if tens == once {
+                    tens + once + 10
+                } else {
+                    tens + once
+                }
+            }
+            x if x > roll => {
+                if tens == once {
+                    0
+                } else {
+                    once
+                }
+            }
+            _ => 0,
+        }
     }
 }
 
@@ -273,18 +322,18 @@ impl SavePlayerCharacter {
 pub enum DCTag {
     Mook,
     Lieutenant,
-    Flips { value: u8 },
-    MultipleAttacks { value: u8 },
+    Flips(u8),
+    MultipleAttacks(u8),
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum AttackTag {
     ShortRange,
-    Reload { value: u8 },
+    Reload(u8),
     Paralytic,
 }
 
-#[derive(Debug, Deserialize, Serialize,  Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Attack {
     name: String,
     skill: u8,
@@ -292,7 +341,7 @@ pub struct Attack {
     tags: Vec<AttackTag>,
 }
 
-#[derive(Asset, TypePath, Debug, Deserialize, Serialize,  Clone)]
+#[derive(Asset, TypePath, Debug, Deserialize, Serialize, Clone)]
 pub struct SaveDirectorCharacter {
     pub tag: String,
     pub tags: Vec<DCTag>,
@@ -309,19 +358,20 @@ pub struct SaveCharacters {
 
 #[derive(Debug, Clone)]
 pub enum CharacterType {
-    PlayerCharacter{char: SavePlayerCharacter},
-    DirectorCharacter{char: SaveDirectorCharacter},
+    PlayerCharacter { char: SavePlayerCharacter },
+    DirectorCharacter { char: SaveDirectorCharacter },
 }
+
 impl SaveCharacters {
     pub fn get_char_for_tag(&self, tag: String) -> Option<CharacterType> {
         for pc in self.player_characters.iter() {
             if pc.tag == tag {
-                return Some(CharacterType::PlayerCharacter {char: pc.clone()});
+                return Some(CharacterType::PlayerCharacter { char: pc.clone() });
             }
         }
         for dc in self.director_characters.iter() {
             if dc.tag == tag {
-                return Some(CharacterType::DirectorCharacter {char: dc.clone()});
+                return Some(CharacterType::DirectorCharacter { char: dc.clone() });
             }
         }
         None

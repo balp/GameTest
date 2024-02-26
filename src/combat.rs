@@ -6,7 +6,10 @@ use bevy::window::PrimaryWindow;
 use rand::Rng;
 
 use crate::asset_loader::CombatAsset;
-use crate::characters::{CharacterName, CharacterSkills, CharacterType, Initiative, NoName, PortraitAtlasId, SaveCharacters};
+use crate::characters::{
+    CharacterName, CharacterSkills, CharacterType, DirectorCharacter, IconName, Initiative, NoName,
+    PortraitAtlasId, SaveCharacters, Vitality,
+};
 use crate::combat_map::CombatMap;
 use crate::schedule::CombatUpdateSets;
 use crate::states::GameState;
@@ -26,7 +29,7 @@ impl Plugin for Combat {
             .add_systems(OnEnter(GameState::CombatTurns), action_menu)
             .add_systems(
                 Update,
-                (enable_buttons, )
+                (enable_buttons,)
                     .run_if(in_state(GameState::CombatTurns))
                     .in_set(CombatUpdateSets::TurnChanges),
             )
@@ -129,12 +132,64 @@ fn combat_setup(
             setup_combat_map(&mut commands, combat_map, &combat_asset);
 
             for in_scene in combat_map.start_positions.iter() {
-                debug!("{:?} in scene", in_scene);
                 if let Some(char_type) = saved_chars.get_char_for_tag(in_scene.entity_tag.clone()) {
-                    debug!("{:?} in scene: {:?}", in_scene, char_type);
                     match char_type {
-                        CharacterType::PlayerCharacter { .. } => {}
-                        CharacterType::DirectorCharacter { .. } => {}
+                        CharacterType::PlayerCharacter { char } => {
+                            if let Some((entity, portait_id)) =
+                                character_entity_and_portrait_for_tag(
+                                    &characters,
+                                    &in_scene.entity_tag,
+                                )
+                            {
+                                let initiative = char.initiative();
+                                let character_initiative = Initiative::new(initiative);
+                                commands.entity(entity).insert(character_initiative);
+                                commands
+                                    .entity(entity)
+                                    .insert(InZone::new(in_scene.zone_tag.as_str()));
+                                add_combat_token(
+                                    &mut commands,
+                                    &combat_asset,
+                                    100.,
+                                    entity,
+                                    &portait_id,
+                                );
+                            }
+                        }
+                        CharacterType::DirectorCharacter { char } => {
+                            if let Some(portait_id) = director_portrait_for_tag(
+                                &director_characters,
+                                &in_scene.entity_tag,
+                            ) {
+                                commands.spawn((
+                                    NoName {
+                                        slug: in_scene.entity_tag.clone(),
+                                        alias: in_scene.entity_tag.clone(),
+                                        generic: in_scene.entity_tag.clone(),
+                                    },
+                                    Initiative {
+                                        value: char.initiative,
+                                    },
+                                    Vitality {
+                                        value: char.vitality,
+                                    },
+                                    SpriteSheetBundle {
+                                        transform: Transform {
+                                            translation: Vec3::new(100., -400., 3.),
+                                            ..default()
+                                        },
+                                        atlas: TextureAtlas {
+                                            layout: combat_asset.portrait_atlas.clone(),
+                                            index: portait_id.index,
+                                        },
+                                        texture: combat_asset.portrait_image.clone(),
+                                        ..default()
+                                    },
+                                    InZone::new(in_scene.zone_tag.as_str()),
+                                    OnCombatScreen,
+                                ));
+                            }
+                        }
                     }
                 }
             }
@@ -158,58 +213,31 @@ fn combat_setup(
         OnCombatScreen,
     ));
 
-    for (entity, name, skills, _portait_id) in characters.iter() {
-        let mut rng = rand::thread_rng();
-        let roll = rng.gen_range(1..=100);
-        let tens = roll / 10u8;
-        let once = roll % 10u8;
-        let initiative: u8 = match skills.alertness.value {
-            x if x <= roll => {
-                if tens == once {
-                    tens + once + 10
-                } else {
-                    tens + once
-                }
-            }
-            x if x > roll => {
-                if tens == once {
-                    0
-                } else {
-                    once
-                }
-            }
-            _ => 0,
-        };
-        debug!("Rolled initiative {:?} for {:?}", initiative, name);
-        let character_initiative = Initiative::new(initiative);
-        commands.entity(entity).insert(character_initiative);
-    }
-
-    for (entity, name, _skills, _portait_id) in characters.iter() {
-        debug!("Adding player character to {:?}::{:?} map", entity, name);
-        commands.entity(entity).insert(InZone::new("cell_a_13"));
-    }
-    let mut x_pos = 100.;
-    for (entity, name, _skills, portait_id) in characters.iter() {
-        debug!("Setup character portrait {:?}::{:?} map", name, portait_id);
-        add_combat_token(&mut commands, &combat_asset, x_pos, entity, portait_id);
-        x_pos += 100.;
-    }
-
-    for (entity, name, _portait_id) in director_characters.iter() {
-        debug!("Adding director character to {:?}::{:?} map", entity, name);
-        commands.entity(entity).insert(InZone::new("central"));
-    }
-    for (entity, _name, portait_id) in director_characters.iter() {
-        debug!(
-            "Adding director character portrait {:?}::{:?} map",
-            entity, portait_id
-        );
-        add_combat_token(&mut commands, &combat_asset, x_pos, entity, portait_id);
-        x_pos += 100.;
-    }
-
     game_state.set(GameState::CombatTurns);
+}
+
+fn character_entity_and_portrait_for_tag(
+    characters: &Query<(Entity, &CharacterName, &CharacterSkills, &PortraitAtlasId)>,
+    tag: &String,
+) -> Option<(Entity, PortraitAtlasId)> {
+    for (entity, name, _skills, portait_id) in characters.iter() {
+        if &(name.slug) == tag {
+            return Some((entity.clone(), portait_id.clone()));
+        }
+    }
+    None
+}
+
+fn director_portrait_for_tag(
+    dcs: &Query<(Entity, &NoName, &PortraitAtlasId)>,
+    tag: &String,
+) -> Option<PortraitAtlasId> {
+    for (_entity, name, portait_id) in dcs.iter() {
+        if &(name.slug) == tag {
+            return Some(portait_id.clone());
+        }
+    }
+    None
 }
 
 fn setup_combat_map(
@@ -546,7 +574,7 @@ fn show_initiative(
 
 fn setup_zone_sprites(mut commands: Commands, zones: Query<(Entity, &ZoneArea, &ZoneName)>) {
     for (entity, area, name) in zones.iter() {
-        debug!("render zone: {:?} {:?}", name, area);
+        debug!("setup_zone_sprites: {:?} {:?}", name, area);
         commands.entity(entity).insert((
             SpriteBundle {
                 sprite: Sprite {
