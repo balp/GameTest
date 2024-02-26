@@ -6,7 +6,7 @@ use bevy::window::PrimaryWindow;
 use rand::Rng;
 
 use crate::asset_loader::CombatAsset;
-use crate::characters::{CharacterName, CharacterSkills, Initiative, NoName, PortraitAtlasId};
+use crate::characters::{CharacterName, CharacterSkills, CharacterType, Initiative, NoName, PortraitAtlasId, SaveCharacters};
 use crate::combat_map::CombatMap;
 use crate::schedule::CombatUpdateSets;
 use crate::states::GameState;
@@ -26,7 +26,7 @@ impl Plugin for Combat {
             .add_systems(OnEnter(GameState::CombatTurns), action_menu)
             .add_systems(
                 Update,
-                (enable_buttons,)
+                (enable_buttons, )
                     .run_if(in_state(GameState::CombatTurns))
                     .in_set(CombatUpdateSets::TurnChanges),
             )
@@ -115,7 +115,7 @@ fn combat_setup(
     characters: Query<(Entity, &CharacterName, &CharacterSkills, &PortraitAtlasId)>,
     director_characters: Query<(Entity, &NoName, &PortraitAtlasId)>,
     mut game_state: ResMut<NextState<GameState>>,
-    // saved_characters: Res<Assets<SaveCharacters>>,
+    saved_characters: Res<Assets<SaveCharacters>>,
     combat_maps: Res<Assets<CombatMap>>,
 ) {
     info!("combat_setup...");
@@ -125,7 +125,20 @@ fn combat_setup(
     // Draw map
     if let Some(combat_map) = combat_maps.get(combat_asset.combat_map.clone()) {
         debug!("combat_map: {:?}", combat_map);
-        setup_combat_map(&mut commands, combat_map, &combat_asset);
+        if let Some(saved_chars) = saved_characters.get(combat_asset.characters.clone()) {
+            setup_combat_map(&mut commands, combat_map, &combat_asset);
+
+            for in_scene in combat_map.start_positions.iter() {
+                debug!("{:?} in scene", in_scene);
+                if let Some(char_type) = saved_chars.get_char_for_tag(in_scene.entity_tag.clone()) {
+                    debug!("{:?} in scene: {:?}", in_scene, char_type);
+                    match char_type {
+                        CharacterType::PlayerCharacter { .. } => {}
+                        CharacterType::DirectorCharacter { .. } => {}
+                    }
+                }
+            }
+        }
     }
 
     commands.spawn((

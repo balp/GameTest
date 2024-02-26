@@ -107,14 +107,14 @@ pub struct DirectorCharacter {
     pub vitality: Vitality,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct PlayerName {
     pub first: String,
     pub last: String,
     pub alias: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum SkillType {
     Agility { value: u8 },
     Alertness { value: u8 },
@@ -146,7 +146,7 @@ pub enum SkillType {
     Willpower { value: u8 },
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum AbilityType {
     BornBehindTheWheel,
     BeenEverywhere,
@@ -164,7 +164,7 @@ pub enum AbilityType {
     MadInventor,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum ComplicationType {
     Overconfident,
     CodeOfHonour,
@@ -176,7 +176,7 @@ pub enum ComplicationType {
     Sleepy,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum LanguageLevel {
     Native,
     Fluent,
@@ -187,13 +187,13 @@ pub enum LanguageLevel {
     Learning0,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct LanguageType {
     name: String,
     level: LanguageLevel,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum PlotHook {
     MediaDarling,
     LookingForACase,
@@ -203,7 +203,7 @@ pub enum PlotHook {
     ArchEnemy,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum GearKitType {
     BeachWear,
     Bicycle,
@@ -236,14 +236,14 @@ pub enum GearKitType {
     WalkieTalkie,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct GearKit {
     kit_type: GearKitType,
     signature: bool,
     scene: bool,
 }
 
-#[derive(Asset, TypePath, Debug, Deserialize, Serialize)]
+#[derive(Asset, TypePath, Debug, Deserialize, Serialize, Clone)]
 pub struct SavePlayerCharacter {
     pub tag: String,
     pub name: PlayerName,
@@ -269,7 +269,7 @@ impl SavePlayerCharacter {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum DCTag {
     Mook,
     Lieutenant,
@@ -277,14 +277,14 @@ pub enum DCTag {
     MultipleAttacks { value: u8 },
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum AttackTag {
     ShortRange,
     Reload { value: u8 },
     Paralytic,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize,  Clone)]
 pub struct Attack {
     name: String,
     skill: u8,
@@ -292,7 +292,7 @@ pub struct Attack {
     tags: Vec<AttackTag>,
 }
 
-#[derive(Asset, TypePath, Debug, Deserialize, Serialize)]
+#[derive(Asset, TypePath, Debug, Deserialize, Serialize,  Clone)]
 pub struct SaveDirectorCharacter {
     pub tag: String,
     pub tags: Vec<DCTag>,
@@ -305,6 +305,27 @@ pub struct SaveDirectorCharacter {
 pub struct SaveCharacters {
     pub player_characters: Vec<SavePlayerCharacter>,
     pub director_characters: Vec<SaveDirectorCharacter>,
+}
+
+#[derive(Debug, Clone)]
+pub enum CharacterType {
+    PlayerCharacter{char: SavePlayerCharacter},
+    DirectorCharacter{char: SaveDirectorCharacter},
+}
+impl SaveCharacters {
+    pub fn get_char_for_tag(&self, tag: String) -> Option<CharacterType> {
+        for pc in self.player_characters.iter() {
+            if pc.tag == tag {
+                return Some(CharacterType::PlayerCharacter {char: pc.clone()});
+            }
+        }
+        for dc in self.director_characters.iter() {
+            if dc.tag == tag {
+                return Some(CharacterType::DirectorCharacter {char: dc.clone()});
+            }
+        }
+        None
+    }
 }
 
 #[derive(Default)]
